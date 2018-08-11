@@ -22,12 +22,14 @@
 #include <ripext>
 #include <sourcetvmanager>
 
+#include <AutoDemo>
+
 #pragma newdecls  required
 #pragma semicolon 1
 
 public Plugin myinfo = {
   description = "",
-  version     = "1.0",
+  version     = "1.0.1",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -79,6 +81,8 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
   CreateNative("DemoRec_IsRecording",   API_IsRecording);
   CreateNative("DemoRec_StartRecord",   API_StartRecord);
   CreateNative("DemoRec_StopRecord",    API_StopRecord);
+
+  RegPluginLibrary("AutoDemo");
 
   g_hCorePlugin = hMySelf;
 }
