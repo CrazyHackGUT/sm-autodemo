@@ -28,8 +28,8 @@
 #pragma semicolon 1
 
 public Plugin myinfo = {
-  description = "",
-  version     = "1.0.1",
+  description = "Recorder Core for web-site",
+  version     = "1.0.2",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -65,6 +65,7 @@ char  g_szBaseDemoPath[PLATFORM_MAX_PATH];
 
 ArrayList g_hUniquePlayers;
 char      g_szDemoName[64];
+char      g_szMapName[PLATFORM_MAX_PATH];
 int       g_iStartTime;
 bool      g_bRecording;
 int       g_iEndTime;
@@ -92,6 +93,15 @@ public void OnAllPluginsLoaded() {
     SetFailState("SourceTV bot is not active.");
 
   BuildPath(Path_SM, g_szBaseDemoPath, sizeof(g_szBaseDemoPath), "data/demos/");
+}
+
+public void OnMapStart() {
+  GetCurrentMap(g_szMapName, sizeof(g_szMapName));
+}
+
+public void OnMapEnd() {
+  if (g_bRecording)
+    Recorder_Stop();
 }
 
 public void OnClientAuthorized(int iClient, const char[] szAuth) {
@@ -218,6 +228,7 @@ void Recorder_Stop() {
   hMetaInfo.SetInt("end_time",        g_iEndTime);
   hMetaInfo.SetInt("recorded_ticks",  iRecordedTicks);
   hMetaInfo.SetString("unique_id",    g_szDemoName);
+  hMetaInfo.SetString("play_map",     g_szMapName);
 
   // add players to JSON.
   char szUserName[128]; // csgo supports nicknames with length 128.
