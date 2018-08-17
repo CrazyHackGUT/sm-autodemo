@@ -18,8 +18,15 @@ Server plugin for AutoDemo system
 For compiling sourcepawn source file (*.sp*), you need SourcePawn Compiler on your PC. You can download him from [here](https://sm.alliedmods.net/downloads.php?branch=stable).
 
 **Note**: You should download archive for your OS. All plugins, compiled on Windows, can run on server with Linux, and vice versa.
+If you use Windows, you must select the source file (*.sp*) and transfer it to **spcomp.exe**. You will compile the source and you will receive a plugin (*.smx*).
 
-TODO
+Else you use Linux, then you need to register **./spcomp file.sp** and you will compile the file.
 
 ## SourceTV Enabling
-TODO
+To enable SourceTV, you need to register the following in server.cfg:
+tv_enable 1
+tv_autorecord 1
+tv_maxclients 0
+tv_name "AutoDemo" // You can change
+tv_port 27020 // Set the port for SourceTV (default is 27020).
+
