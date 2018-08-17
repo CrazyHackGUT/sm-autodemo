@@ -23,7 +23,7 @@ If you use Windows, you must select the source file (*.sp*) and transfer it to *
 Else you use Linux, then you need to register **./spcomp file.sp** and you will compile the file.
 
 ## SourceTV Enabling
-To enable SourceTV, you need to register the following in server.cfg:
+To enable SourceTV, you need to register the following in **server.cfg**:
 - tv_enable 1
 - tv_autorecord 1
 - tv_maxclients 0
