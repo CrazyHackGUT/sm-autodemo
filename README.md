@@ -24,9 +24,9 @@ Else you use Linux, then you need to register **./spcomp file.sp** and you will 
 
 ## SourceTV Enabling
 To enable SourceTV, you need to register the following in server.cfg:
-tv_enable 1
-tv_autorecord 1
-tv_maxclients 0
-tv_name "AutoDemo" // You can change
-tv_port 27020 // Set the port for SourceTV (default is 27020).
+- tv_enable 1
+- tv_autorecord 1
+- tv_maxclients 0
+- tv_name "AutoDemo" // You can change
+- tv_port 27020 // Set the port for SourceTV (default is 27020).
 
