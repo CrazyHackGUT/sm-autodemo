@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.2",
+  version     = "1.0.3",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -72,6 +72,8 @@ public void OnPluginStart()
       LogError("Event with kills is not possible to record: fields with client or victim name is undefined.");
     }
   }
+
+  hGameConf.Close();
 
   g_hRecordMode = CreateConVar("sm_autodemo_recordmode", "1", "0 - disabled\n1 - record maps\n2 - record events", _, true, 0.0, true, 2.0);
   HookConVarChange(g_hRecordMode, OnRecordModeChanged);
