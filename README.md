@@ -3,7 +3,7 @@ Server plugin for AutoDemo system
 
 ## Requirements
 - **[SourceMod 1.9](https://sm.alliedmods.net/)** or higher
-- **[REST in Pawn](https://forums.alliedmods.net/showthread.php?t=298024)
+- **[REST in Pawn](https://forums.alliedmods.net/showthread.php?t=298024)**
 - **[SourceTV Manager](https://forums.alliedmods.net/showthread.php?t=280402)**
 - Nice hands
 
