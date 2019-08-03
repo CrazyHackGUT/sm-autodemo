@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.1",
+  version     = "1.0.2",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -78,6 +78,11 @@ public void OnPluginStart()
 }
 
 public void OnMapStart()
+{
+  RequestFrame(OnMapStart_Post);
+}
+
+public void OnMapStart_Post(any data)
 {
   bool bIsRecording = DemoRec_IsRecording();
   if (g_iRecordMode == 1 && !bIsRecording)
@@ -137,7 +142,7 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
       bIsRoundEnd   && DemoRec_TriggerEvent("Core:RoundEnd");
     }
 
-    if (!g_bRoundRecord)
+    if (!g_bRoundRecord || g_iRecordMode != 2)
     {
       return;
     }

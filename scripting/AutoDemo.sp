@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.0.3",
+  version     = "1.0.4",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -52,7 +52,6 @@ public Plugin myinfo = {
  * -> players (only unique players!)
  * --> account_id
  * --> name
- * --> is_bot
  * -> events
  * --> event_name
  * --> time
@@ -91,9 +90,6 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
 }
 
 public void OnAllPluginsLoaded() {
-  if (!SourceTV_IsActive())
-    SetFailState("SourceTV bot is not active.");
-
   BuildPath(Path_SM, g_szBaseDemoPath, sizeof(g_szBaseDemoPath), "data/demos/");
 }
 
@@ -107,8 +103,13 @@ public void OnMapEnd() {
 }
 
 public void OnClientAuthorized(int iClient, const char[] szAuth) {
-  bool bIsBot = IsFakeClient(iClient);
-  int iAccountID = (bIsBot ? 0 : GetSteamAccountID(iClient));
+  // Don't write in metadata any bot.
+  if (IsFakeClient(iClient))
+  {
+    return;
+  }
+
+  int iAccountID = GetSteamAccountID(iClient);
   char szName[32];
   GetClientName(iClient, szName, sizeof(szName));
 
@@ -120,7 +121,6 @@ public void OnClientAuthorized(int iClient, const char[] szAuth) {
     if (hPack.ReadCell() == iAccountID) {
       hPack.Reset(true);
       hPack.WriteCell(iAccountID);
-      hPack.WriteCell(bIsBot);
       hPack.WriteString(szName);
 
       return;
@@ -129,7 +129,6 @@ public void OnClientAuthorized(int iClient, const char[] szAuth) {
 
   hPack = new DataPack();
   hPack.WriteCell(iAccountID);
-  hPack.WriteCell(bIsBot);
   hPack.WriteString(szName);
   g_hUniquePlayers.Push(hPack);
 }
@@ -196,6 +195,8 @@ public int API_StopRecord(Handle hPlugin, int iNumParams) {
  * @section Recorder Manager
  */
 void Recorder_Start() {
+  Recorder_Validate();
+
   char szDemoPath[PLATFORM_MAX_PATH];
   UTIL_GenerateUUID(g_szDemoName, sizeof(g_szDemoName));
   int iPos = FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
@@ -216,6 +217,8 @@ void Recorder_Start() {
 }
 
 void Recorder_Stop() {
+  Recorder_Validate();
+
   int iRecordedTicks = SourceTV_GetRecordingTick();
   SourceTV_StopRecording();
   g_bRecording = false;
@@ -294,6 +297,12 @@ void Recorder_Stop() {
 
   hMetaInfo.ToFile(szDemoPath);
   hMetaInfo.Close();
+}
+
+void Recorder_Validate()
+{
+  if (!SourceTV_IsActive())
+    SetFailState("SourceTV bot is not active.");
 }
 
 /**

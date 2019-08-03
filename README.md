@@ -30,7 +30,7 @@ To enable SourceTV, you need to register the following in **server.cfg**:
 ```
 // SourceTV options
 tv_enable 1
-tv_autorecord 1
+tv_autorecord 0
 tv_maxclients 0
 tv_name "AutoDemo"
 tv_port 27020
