@@ -40,6 +40,18 @@ native void DemoRec_StopRecord();
 native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = null);
 
 /**
+ * Adds a custom field for client.
+ *
+ * @param iClient       Client identifier.
+ * @param szKey         Key name.
+ * @param szValue       Value.
+ * @param bRewrite      Pass true, if you want rewrite already written value.
+ *
+ * @error Client is invalid or bot.
+ */
+native void DemoRec_SetClientData(int iClient, const char[] szKey, const char[] szValue, bool bRewrite = false);
+
+/**
  * DO NOT EDIT ANYTHING AFTER THIS LINES!
  */
 public SharedPlugin __pl_AutoDemo = {
@@ -54,9 +66,13 @@ public SharedPlugin __pl_AutoDemo = {
 
 #if !defined _REQUIRE_PLUGIN
 public void __pl_AutoDemo_SetNTVOptional() {
+  // v1.0.0
   MarkNativeAsOptional("DemoRec_TriggerEvent");
   MarkNativeAsOptional("DemoRec_IsRecording");
   MarkNativeAsOptional("DemoRec_StartRecord");
   MarkNativeAsOptional("DemoRec_StopRecord");
+
+  // v1.0.5
+  MarkNativeAsOptional("DemoRec_SetClientData");
 }
 #endif

@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.0.4",
+  version     = "1.0.5",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -52,6 +52,8 @@ public Plugin myinfo = {
  * -> players (only unique players!)
  * --> account_id
  * --> name
+ * --> data
+ * ---> ... any data from module ...
  * -> events
  * --> event_name
  * --> time
@@ -83,6 +85,8 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
   CreateNative("DemoRec_IsRecording",   API_IsRecording);
   CreateNative("DemoRec_StartRecord",   API_StartRecord);
   CreateNative("DemoRec_StopRecord",    API_StopRecord);
+
+  CreateNative("DemoRec_SetClientData", API_SetClientData);
 
   RegPluginLibrary("AutoDemo");
 
@@ -119,8 +123,11 @@ public void OnClientAuthorized(int iClient, const char[] szAuth) {
     hPack = g_hUniquePlayers.Get(iPlayer);
     hPack.Reset();
     if (hPack.ReadCell() == iAccountID) {
+      StringMap hMap = hPack.ReadCell();
+
       hPack.Reset(true);
       hPack.WriteCell(iAccountID);
+      hPack.WriteCell(hMap);
       hPack.WriteString(szName);
 
       return;
@@ -129,6 +136,7 @@ public void OnClientAuthorized(int iClient, const char[] szAuth) {
 
   hPack = new DataPack();
   hPack.WriteCell(iAccountID);
+  hPack.WriteCell(new StringMap());
   hPack.WriteString(szName);
   g_hUniquePlayers.Push(hPack);
 }
@@ -192,6 +200,61 @@ public int API_StopRecord(Handle hPlugin, int iNumParams) {
 }
 
 /**
+ * Params for this native:
+ * -> iClient
+ * -> szKey
+ * -> szValue
+ * -> bRewrite
+ */
+public int API_SetClientData(Handle hPlugin, int iNumParams)
+{
+  if (!g_bRecording)
+    return 0;
+
+  int iClient = GetNativeCell(1);
+  if (0 < iClient || iClient > MaxClients)
+  {
+    return ThrowNativeError(SP_ERROR_NATIVE, "Client ID %d is invalid", iClient);
+  }
+
+  if (IsFakeClient(iClient))
+  {
+    return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is a bot", iClient);
+  }
+
+  int iAccountID = GetSteamAccountID(iClient);
+
+  // Find client in ArrayList.
+  DataPack hClient;
+  int iClientCount = g_hUniquePlayers.Length;
+  for (int iClientId = 0; iClientId < iClientCount && !hClient; ++iClientId)
+  {
+    hClient = g_hUniquePlayers.Get(iClientId);
+    hClient.Reset();
+
+    if (hClient.ReadCell() != iAccountID)
+    {
+      hClient = null;
+    }
+  }
+
+  if (!hClient)
+  {
+    return ThrowNativeError(SP_ERROR_NATIVE, "Couldn't find client %d is registered players", iClient);
+  }
+
+  char szKey[128];
+  char szValue[512];
+
+  GetNativeString(2, szKey, sizeof(szKey));
+  GetNativeString(3, szValue, sizeof(szValue));
+
+  StringMap hMap = hClient.ReadCell();
+  hMap.SetString(szKey, szValue, GetNativeCell(4));
+  return 0;
+}
+
+/**
  * @section Recorder Manager
  */
 void Recorder_Start() {
@@ -241,7 +304,9 @@ void Recorder_Stop() {
   char szUserName[128]; // csgo supports nicknames with length 128.
 
   DataPack    hPlayerPack;
+  StringMap   hCustomFields;
   JSONObject  hPlayerJSON;
+  JSONObject  hPlayerFields;
   JSONArray   hPlayers = new JSONArray();
   int iPlayersCount = g_hUniquePlayers.Length;
   for (int iPlayer; iPlayer < iPlayersCount; ++iPlayer) {
@@ -250,13 +315,18 @@ void Recorder_Stop() {
     hPlayerPack.Reset();
 
     hPlayerJSON.SetInt("account_id", hPlayerPack.ReadCell());
-    hPlayerJSON.SetBool("is_bot", hPlayerPack.ReadCell());
+    hCustomFields = hPlayerPack.ReadCell();
     hPlayerPack.ReadString(szUserName, sizeof(szUserName));
     hPlayerPack.Close();
     hPlayerJSON.SetString("name", szUserName);
 
+    hPlayerFields = UTIL_StringMapToJSON(hCustomFields);
+    hPlayerJSON.Set("data", hPlayerFields);
+
     hPlayers.Push(hPlayerJSON);
     hPlayerJSON.Close();
+    hCustomFields.Close();
+    hPlayerFields.Close();
   }
   hMetaInfo.Set("players", hPlayers);
   hPlayers.Close();
