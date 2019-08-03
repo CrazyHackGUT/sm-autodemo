@@ -1,7 +1,7 @@
 /**
  * AutoDemo Recorder
  * Recorder for web-site
- * Copyright (C) 2018 CrazyHackGUT aka Kruzya
+ * Copyright (C) 2018-2019 CrazyHackGUT aka Kruzya
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
