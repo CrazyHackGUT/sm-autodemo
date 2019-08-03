@@ -1,5 +1,9 @@
 /**
  * This file contains all metadata for [AutoDemo] Event Manager.
+ *
+ * Authors:
+ * -> CrazyHackGUT: TF2 event details.
+ * -> Rabb1tof:     CS:S, CS:GO event details.
  */
 
 "Games"
@@ -8,32 +12,34 @@
   {
     "Keys"
     {
-      "Round Start"   "teamplay_round_start"
-      "Round End"     "teamplay_round_end"
+      "Round Start"           "teamplay_round_start"
+      "Round End"             "teamplay_round_end"
 
       "Player Kill"           "player_death"
       "Player Kill - Client"  "attacker"
       "Player Kill - Victim"  "userid"
     }
   }
+
   "cstrike"
   {
     "Keys"
     {
-      "Round Start"   "round_start"
-      "Round End"     "round_end"
+      "Round Start"           "round_start"
+      "Round End"             "round_end"
 
       "Player Kill"           "player_death"
       "Player Kill - Client"  "attacker"
       "Player Kill - Victim"  "userid"
     }
   }
+
   "csgo"
   {
     "Keys"
     {
-      "Round Start"   "round_start"
-      "Round End"     "round_end"
+      "Round Start"           "round_start"
+      "Round End"             "round_end"
 
       "Player Kill"           "player_death"
       "Player Kill - Client"  "attacker"
