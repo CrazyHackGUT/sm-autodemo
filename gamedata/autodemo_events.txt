@@ -1,0 +1,19 @@
+/**
+ * This file contains all metadata for [AutoDemo] Event Manager.
+ */
+
+"Games"
+{
+  "tf"
+  {
+    "Keys"
+    {
+      "Round Start"   "teamplay_round_start"
+      "Round End"     "teamplay_round_end"
+
+      "Player Kill"           "player_death"
+      "Player Kill - Client"  "attacker"
+      "Player Kill - Victim"  "userid"
+    }
+  }
+}
