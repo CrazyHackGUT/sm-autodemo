@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.0.5",
+  version     = "1.0.6",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -108,7 +108,7 @@ public void OnMapEnd() {
 
 public void OnClientAuthorized(int iClient, const char[] szAuth) {
   // Don't write in metadata any bot.
-  if (IsFakeClient(iClient))
+  if (IsFakeClient(iClient) || !g_bRecording)
   {
     return;
   }
