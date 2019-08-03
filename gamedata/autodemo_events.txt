@@ -16,4 +16,28 @@
       "Player Kill - Victim"  "userid"
     }
   }
+  "cstrike"
+  {
+    "Keys"
+    {
+      "Round Start"   "round_start"
+      "Round End"     "round_end"
+
+      "Player Kill"           "player_death"
+      "Player Kill - Client"  "attacker"
+      "Player Kill - Victim"  "userid"
+    }
+  }
+  "csgo"
+  {
+    "Keys"
+    {
+      "Round Start"   "round_start"
+      "Round End"     "round_end"
+
+      "Player Kill"           "player_death"
+      "Player Kill - Client"  "attacker"
+      "Player Kill - Victim"  "userid"
+    }
+  }
 }
