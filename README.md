@@ -23,7 +23,7 @@ If you use Windows, you must select the source file (*.sp*) and transfer it to *
 
 Else you use Linux, then you need to register **./spcomp file.sp** and you will compile the file.
 
-**P.S.**: In both cases, the plugin is compiled into the source folder. But in the case of Linux, for everything to work, you must be in the folder with the compiler. Also if you use SM 1.10+, then it's better to use spcomp64.
+**P.S.**: In both cases, the plugin is compiled into the source folder. But in the case of Linux, for everything to work, you must be in the folder with the compiler. Also if you use SM 1.10+, then it's better to use `spcomp64`.
 
 ## SourceTV Enabling
 To enable SourceTV, you need to register the following in **server.cfg**:

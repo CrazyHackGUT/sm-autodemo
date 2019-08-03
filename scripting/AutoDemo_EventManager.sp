@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0",
+  version     = "1.0.1",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -77,6 +77,43 @@ public void OnPluginStart()
   HookConVarChange(g_hRecordMode, OnRecordModeChanged);
 }
 
+public void OnMapStart()
+{
+  bool bIsRecording = DemoRec_IsRecording();
+  if (g_iRecordMode == 1 && !bIsRecording)
+  {
+    DemoRec_StartRecord();
+    bIsRecording = true;
+  }
+
+  bIsRecording && DemoRec_TriggerEvent("Core:MapStart");
+}
+
+public void OnMapEnd()
+{
+  if (DemoRec_IsRecording())
+  {
+    DemoRec_TriggerEvent("Core:MapEnd");
+
+    g_iRecordMode == 1 && DemoRec_StopRecord();
+  }
+}
+
+public void OnClientSayCommand_Post(int iClient, const char[] szChatType, const char[] szMessage)
+{
+  if (!DemoRec_IsRecording())
+  {
+    return;
+  }
+
+  StringMap hMap = new StringMap();
+  UTIL_WriteClient(hMap, "client", iClient);
+  hMap.SetString("text", szMessage);
+  hMap.SetString("type", szChatType[3] == '_' ? "team" : "public");
+  DemoRec_TriggerEvent("Core:ChatMessage", hMap);
+  hMap.Close();
+}
+
 public void OnConfigsExecuted()
 {
   OnRecordModeChanged(null, NULL_STRING, NULL_STRING);
@@ -124,10 +161,12 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
 
   // Add event with kill.
   StringMap hEventDetails = new StringMap();
-  UTIL_WriteClient(hEventDetails, hEvent, "client", g_szKillClient);
-  UTIL_WriteClient(hEventDetails, hEvent, "victim", g_szKillVictim);
+  UTIL_WriteClientFromEvent(hEventDetails, hEvent, "client", g_szKillClient);
+  UTIL_WriteClientFromEvent(hEventDetails, hEvent, "victim", g_szKillVictim);
 
   DemoRec_TriggerEvent("Core:PlayerDeath", hEventDetails);
+
+  hEventDetails.Close();
 }
 
 public void OnRecordModeChanged(ConVar hConVar, const char[] szOV, const char[] szNV)
@@ -198,15 +237,20 @@ bool UTIL_GetField(Handle hGameConf, const char[] szFieldName, char[] szBuffer, 
   return GameConfGetKeyValue(hGameConf, szFieldName, szBuffer, iBufferLength);
 }
 
-void UTIL_WriteClient(StringMap hMap, Event hEvent, const char[] szMapName, const char[] szEventName)
+void UTIL_WriteClientFromEvent(StringMap hMap, Event hEvent, const char[] szMapName, const char[] szEventName)
 {
-  int iAccountID = 0;
-  int iUserID = hEvent.GetInt(szEventName, 0);
-  if (iUserID)
+  int iClient = hEvent.GetInt(szEventName, 0);
+  if (iClient)
   {
-    int iClient = GetClientOfUserId(iUserID);
-    iAccountID = GetSteamAccountID(iClient);
+    iClient = GetClientOfUserId(iClient);
   }
+
+  UTIL_WriteClient(hMap, szMapName, iClient);
+}
+
+void UTIL_WriteClient(StringMap hMap, const char[] szMapName, int iClient)
+{
+  int iAccountID = iClient ? GetSteamAccountID(iClient) : 0;
 
   char szAccountID[16];
   IntToString(iAccountID, szAccountID, sizeof(szAccountID));
