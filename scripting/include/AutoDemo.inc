@@ -37,6 +37,7 @@ native void DemoRec_StopRecord();
  *                      Optional.
  * @param data          Any custom data for event listeners.
  * @note                We clones your StringMap, if he passed to function. So, please, close StringMap handle after passing.
+ * @noreturn
  */
 native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = null, any data = 0);
 
@@ -49,6 +50,7 @@ native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = nul
  * @param bRewrite      Pass true, if you want rewrite already written value.
  *
  * @error Client is invalid or bot.
+ * @noreturn
  */
 native void DemoRec_SetClientData(int iClient, const char[] szKey, const char[] szValue, bool bRewrite = false);
 
@@ -84,6 +86,15 @@ native void DemoRec_AddEventListener(const char[] szEventName, DemoRec_EventList
 native void DemoRec_RemoveEventListener(const char[] szEventName, DemoRec_EventListener ptrListener);
 
 /**
+ * Adds a custom field for client.
+ *
+ * @param szField       Key name.
+ * @param szValue       Value.
+ * @noreturn
+ */
+native void DemoRec_SetDemoData(const char[] szField, const char[] szValue);
+
+/**
  * DO NOT EDIT ANYTHING AFTER THIS LINES!
  */
 public SharedPlugin __pl_AutoDemo = {
@@ -110,5 +121,8 @@ public void __pl_AutoDemo_SetNTVOptional() {
   // v1.1.1
   MarkNativeAsOptional("DemoRec_AddEventListener");
   MarkNativeAsOptional("DemoRec_RemoveEventListener");
+
+  // v1.1.2
+  MarkNativeAsOptional("DemoRec_SetDemoData");
 }
 #endif

@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.1.1",
+  version     = "1.1.2",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -59,6 +59,9 @@ public Plugin myinfo = {
  * --> tick
  * --> data
  * ---> ... any data from module ...
+ * -> data
+ * --> ... any data from module ...
+ *
  *      NOTE: we support only strings in data map.
  *      Any cell can't be added to JSON.
  */
@@ -73,6 +76,7 @@ int       g_iStartTick;
 bool      g_bRecording;
 int       g_iEndTime;
 ArrayList g_hEvents;
+StringMap g_hCustom;
 
 Handle    g_hCorePlugin;
 
@@ -90,6 +94,8 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
 
   CreateNative("DemoRec_AddEventListener",    API_AddEventListener);
   CreateNative("DemoRec_RemoveEventListener", API_RemoveEventListener);
+
+  CreateNative("DemoRec_SetDemoData", API_SetDemoData);
 
   RegPluginLibrary("AutoDemo");
 
@@ -208,6 +214,26 @@ public int API_RemoveEventListener(Handle hPlugin, int iNumParams)
 
 /**
  * Params for this native:
+ * -> szField (string const)
+ * -> szValue (string const)
+ */
+public int API_SetDemoData(Handle hPlugin, int iNumParams)
+{
+  if (!g_bRecording)
+  {
+    return;
+  }
+
+  char szField[64];
+  char szValue[512];
+  GetNativeString(1, szField, sizeof(szField));
+  GetNativeString(2, szValue, sizeof(szValue));
+
+  g_hCustom.SetString(szField, szValue);
+}
+
+/**
+ * Params for this native:
  * null
  */
 public int API_IsRecording(Handle hPlugin, int iNumParams) {
@@ -307,6 +333,7 @@ void Recorder_Start() {
 
   g_hUniquePlayers = new ArrayList(ByteCountToCells(4));
   g_hEvents = new ArrayList(ByteCountToCells(4));
+  g_hCustom = new StringMap();
   g_iStartTick = GetGameTickCount();
 
   for (int iClient = MaxClients; iClient != 0; --iClient)
@@ -397,6 +424,12 @@ void Recorder_Stop() {
   hMetaInfo.Set("events", hEvents);
   hEvents.Close();
   g_hEvents.Clear();
+
+  // add custom fields.
+  JSONObject hDemoFields = UTIL_StringMapToJSON(g_hCustom);
+  hMetaInfo.Set("data", hDemoFields);
+  hDemoFields.Close();
+  g_hCustom.Close();
 
   hMetaInfo.ToFile(szDemoPath);
   hMetaInfo.Close();
