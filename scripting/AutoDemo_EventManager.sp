@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.3",
+  version     = "1.0.4",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -104,6 +104,32 @@ public void OnMapEnd()
 
     g_iRecordMode == 1 && DemoRec_StopRecord();
   }
+}
+
+public void OnClientAuthorized(int iClient)
+{
+  if (!DemoRec_IsRecording())
+  {
+    return;
+  }
+
+  StringMap hMap = new StringMap();
+  UTIL_WriteClient(hMap, "client", iClient);
+  DemoRec_TriggerEvent("Core:ClientAuth", hMap);
+  hMap.Close();
+}
+
+public void OnClientDisconnect(int iClient)
+{
+  if (!DemoRec_IsRecording())
+  {
+    return;
+  }
+
+  StringMap hMap = new StringMap();
+  UTIL_WriteClient(hMap, "client", iClient);
+  DemoRec_TriggerEvent("Core:ClientDisconnect", hMap);
+  hMap.Close();
 }
 
 public void OnClientSayCommand_Post(int iClient, const char[] szChatType, const char[] szMessage)
