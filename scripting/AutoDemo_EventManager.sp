@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.4",
+  version     = "1.0.5",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -197,7 +197,7 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
   UTIL_WriteClientFromEvent(hEventDetails, hEvent, "client", g_szKillClient);
   UTIL_WriteClientFromEvent(hEventDetails, hEvent, "victim", g_szKillVictim);
 
-  DemoRec_TriggerEvent("Core:PlayerDeath", hEventDetails);
+  DemoRec_TriggerEvent("Core:PlayerDeath", hEventDetails, hEvent);
 
   hEventDetails.Close();
 }

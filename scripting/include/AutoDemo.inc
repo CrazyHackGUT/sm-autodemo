@@ -35,9 +35,10 @@ native void DemoRec_StopRecord();
  *                      If web supports, event should be rendered on demo log.
  * @param hData         StringMap with any custom data. We support only string in values.
  *                      Optional.
+ * @param data          Any custom data for event listeners.
  * @note                We clones your StringMap, if he passed to function. So, please, close StringMap handle after passing.
  */
-native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = null);
+native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = null, any data = 0);
 
 /**
  * Adds a custom field for client.
@@ -58,10 +59,11 @@ native void DemoRec_SetClientData(int iClient, const char[] szKey, const char[] 
  * @param szEventName   Event name.
  * @param iBufferLength Buffer size for storing event name.
  * @param hEventDetails Event details.
+ * @param data          Any custom data from event creator.
  *
  * @return  True if event should be written, false if blocked. 
  */
-typedef DemoRec_EventListener = function bool (char[] szEventName, int iBufferLength, StringMap hEventDetails);
+typedef DemoRec_EventListener = function bool (char[] szEventName, int iBufferLength, StringMap hEventDetails, any &data);
 
 /**
  * Adds a event listener.

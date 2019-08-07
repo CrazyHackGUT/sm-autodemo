@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.1",
+  version     = "1.1.1",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -165,7 +165,8 @@ public int API_TriggerEvent(Handle hPlugin, int iNumParams) {
     hEventData = view_as<StringMap>(CloneHandle(hEventData, g_hCorePlugin));
   }
 
-  if (!UTIL_TriggerEventListeners(szEventName, sizeof(szEventName), hEventData))
+  any data = (iNumParams < 3 ? 0 : GetNativeCell(3));
+  if (!UTIL_TriggerEventListeners(szEventName, sizeof(szEventName), hEventData, data))
   {
     if (hEventData) hEventData.Close();
     return;
@@ -453,7 +454,7 @@ JSONObject UTIL_StringMapToJSON(StringMap hMap) {
   return hJSON;
 }
 
-bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap hMap)
+bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap hMap, any data)
 {
   ArrayList hListeners;
   if (!g_hEventListeners.GetValue(szEventName, hListeners))
@@ -483,6 +484,7 @@ bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap
     Call_PushStringEx(szEventName, iBufferLength, SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
     Call_PushCell(iBufferLength);
     Call_PushCell(hMap);
+    Call_PushCellRef(data);
     Call_Finish(bResult);
 
     if (!bResult)
