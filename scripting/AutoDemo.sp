@@ -64,6 +64,7 @@ public Plugin myinfo = {
  */
 char  g_szBaseDemoPath[PLATFORM_MAX_PATH];
 
+StringMap g_hEventListeners;
 ArrayList g_hUniquePlayers;
 char      g_szDemoName[64];
 char      g_szMapName[PLATFORM_MAX_PATH];
@@ -87,9 +88,13 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
 
   CreateNative("DemoRec_SetClientData", API_SetClientData);
 
+  CreateNative("DemoRec_AddEventListener",    API_AddEventListener);
+  CreateNative("DemoRec_RemoveEventListener", API_RemoveEventListener);
+
   RegPluginLibrary("AutoDemo");
 
   g_hCorePlugin = hMySelf;
+  g_hEventListeners = new StringMap();
 }
 
 public void OnAllPluginsLoaded() {
@@ -160,12 +165,44 @@ public int API_TriggerEvent(Handle hPlugin, int iNumParams) {
     hEventData = view_as<StringMap>(CloneHandle(hEventData, g_hCorePlugin));
   }
 
+  if (!UTIL_TriggerEventListeners(szEventName, sizeof(szEventName), hEventData))
+  {
+    if (hEventData) hEventData.Close();
+    return;
+  }
+
   DataPack hPack = new DataPack();
   hPack.WriteString(szEventName);
   hPack.WriteCell(GetTime());
   hPack.WriteCell(GetGameTickCount() - g_iStartTick);
   hPack.WriteCell(hEventData);
   g_hEvents.Push(hPack);
+}
+
+/**
+ * Params for this native:
+ * -> szEventName (string const)
+ * -> ptrListener (DemoRec_EventListener)
+ */
+public int API_AddEventListener(Handle hPlugin, int iNumParams)
+{
+  char szEventName[64];
+  GetNativeString(1, szEventName, sizeof(szEventName));
+
+  UTIL_AddEventListener(szEventName, hPlugin, view_as<DemoRec_EventListener>(GetNativeFunction(2)));
+}
+
+/**
+ * Params for this native:
+ * -> szEventName (string const)
+ * -> ptrListener (DemoRec_EventListener)
+ */
+public int API_RemoveEventListener(Handle hPlugin, int iNumParams)
+{
+  char szEventName[64];
+  GetNativeString(1, szEventName, sizeof(szEventName));
+
+  UTIL_RemoveEventListener(szEventName, hPlugin, view_as<DemoRec_EventListener>(GetNativeFunction(2)));
 }
 
 /**
@@ -261,7 +298,7 @@ void Recorder_Start() {
 
   char szDemoPath[PLATFORM_MAX_PATH];
   UTIL_GenerateUUID(g_szDemoName, sizeof(g_szDemoName));
-  int iPos = FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
+  FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
   SourceTV_StartRecording(szDemoPath);
 
   g_bRecording = true;
@@ -414,4 +451,95 @@ JSONObject UTIL_StringMapToJSON(StringMap hMap) {
     hShot.Close();
   }
   return hJSON;
+}
+
+bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap hMap)
+{
+  ArrayList hListeners;
+  if (!g_hEventListeners.GetValue(szEventName, hListeners))
+  {
+    // event listeners is not registered for this event.
+    // so just allow writing this event.
+    return true;
+  }
+
+  // Call all listeners.
+  Handle hPlugin;
+  DemoRec_EventListener ptrListener;
+  DataPack hStorage;
+
+  bool bResult;
+
+  int iLength = hListeners.Length;
+  for (int iListener = 0; iListener < iLength; ++iListener)
+  {
+    hStorage = hListeners.Get(iListener);
+    hStorage.Reset();
+
+    hPlugin = hStorage.ReadCell();
+    ptrListener = view_as<DemoRec_EventListener>(hStorage.ReadFunction());
+
+    Call_StartFunction(hPlugin, ptrListener);
+    Call_PushStringEx(szEventName, iBufferLength, SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+    Call_PushCell(iBufferLength);
+    Call_PushCell(hMap);
+    Call_Finish(bResult);
+
+    if (!bResult)
+    {
+      // Someone listener returned false.
+      // Stop handling this event.
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void UTIL_AddEventListener(const char[] szEventName, Handle hPlugin, DemoRec_EventListener ptrListener)
+{
+  ArrayList hListeners;
+  if (!g_hEventListeners.GetValue(szEventName, hListeners))
+  {
+    hListeners = new ArrayList(ByteCountToCells(4));
+    g_hEventListeners.SetValue(szEventName, hListeners);
+  }
+
+  DataPack hPack = new DataPack();
+  hListeners.Push(hPack);
+
+  hPack.WriteCell(hPlugin);
+  hPack.WriteFunction(ptrListener);
+}
+
+void UTIL_RemoveEventListener(const char[] szEventName, Handle hPlugin, DemoRec_EventListener ptrListener)
+{
+  ArrayList hListeners;
+  if (!g_hEventListeners.GetValue(szEventName, hListeners))
+  {
+    // This no has meaning. Just stop.
+    return;
+  }
+
+  DataPack hPack;
+  int iEventListeners = hListeners.Length;
+  for (int iEventListener = 0; iEventListener < iEventListeners; ++iEventListener)
+  {
+    hPack = hListeners.Get(iEventListener);
+    hPack.Reset();
+
+    if (hPack.ReadCell() != hPlugin)
+    {
+      continue;
+    }
+
+    if (hPack.ReadFunction() != ptrListener)
+    {
+      continue;
+    }
+
+    hPack.Close();
+    hListeners.Erase(iEventListener);
+    break;
+  }
 }

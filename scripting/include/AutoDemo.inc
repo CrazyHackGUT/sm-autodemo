@@ -52,6 +52,36 @@ native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = nul
 native void DemoRec_SetClientData(int iClient, const char[] szKey, const char[] szValue, bool bRewrite = false);
 
 /**
+ * Called when event will be triggered.
+ * Event listener allow you modify any event details (event name, data).
+ *
+ * @param szEventName   Event name.
+ * @param iBufferLength Buffer size for storing event name.
+ * @param hEventDetails Event details.
+ *
+ * @return  True if event should be written, false if blocked. 
+ */
+typedef DemoRec_EventListener = function bool (char[] szEventName, int iBufferLength, StringMap hEventDetails);
+
+/**
+ * Adds a event listener.
+ *
+ * @param szEventName   Event name for listening.
+ * @param ptrListener   Pointer to listener.
+ * @noreturn
+ */
+native void DemoRec_AddEventListener(const char[] szEventName, DemoRec_EventListener ptrListener);
+
+/**
+ * Removes a event listener.
+ *
+ * @param szEventName   Event name for stop listening.
+ * @param ptrListener   Pointer to listener.
+ * @noreturn
+ */
+native void DemoRec_RemoveEventListener(const char[] szEventName, DemoRec_EventListener ptrListener);
+
+/**
  * DO NOT EDIT ANYTHING AFTER THIS LINES!
  */
 public SharedPlugin __pl_AutoDemo = {
@@ -74,5 +104,9 @@ public void __pl_AutoDemo_SetNTVOptional() {
 
   // v1.0.5
   MarkNativeAsOptional("DemoRec_SetClientData");
+
+  // v1.1.1
+  MarkNativeAsOptional("DemoRec_AddEventListener");
+  MarkNativeAsOptional("DemoRec_RemoveEventListener");
 }
 #endif
