@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.0.6",
+  version     = "1.1",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -40,8 +40,7 @@ public Plugin myinfo = {
  *
  * What we store in this directory?
  * -> Recorded demo file (*.dem)
- * -> Meta information (*.json)
- * -> Lock file, if demo recording (*.lock)
+ * -> Meta information (*.json). If file doesn't exists - demo records now.
  *
  * About meta:
  * -> play_map
@@ -265,8 +264,6 @@ void Recorder_Start() {
   int iPos = FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
   SourceTV_StartRecording(szDemoPath);
 
-  strcopy(szDemoPath[iPos], sizeof(szDemoPath)-iPos, ".lock");
-  UTIL_CreateEmptyFile(szDemoPath);
   g_bRecording = true;
   g_iStartTime = GetTime();
 
@@ -289,8 +286,6 @@ void Recorder_Stop() {
 
   char szDemoPath[PLATFORM_MAX_PATH];
   int iPos = FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
-  strcopy(szDemoPath[iPos], sizeof(szDemoPath)-iPos, ".lock");
-  DeleteFile(szDemoPath);
 
   strcopy(szDemoPath[iPos], sizeof(szDemoPath)-iPos, ".json");
   JSONObject hMetaInfo = new JSONObject();
@@ -378,15 +373,6 @@ void Recorder_Validate()
 /**
  * @section UTILs
  */
-void UTIL_CreateEmptyFile(const char[] szPath) {
-  if (FileExists(szPath))
-    return;
-
-  File hFile = OpenFile(szPath, "wb");
-  if (hFile)
-    hFile.Close();
-}
-
 int UTIL_GenerateUUID(char[] szBuffer, int iBufferLength) {
   return FormatEx(szBuffer, iBufferLength, "%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
     // 32 bits for "time_low"
