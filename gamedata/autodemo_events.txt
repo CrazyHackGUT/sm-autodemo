@@ -8,38 +8,31 @@
 
 "Games"
 {
+  "#default"
+  {
+    "#supported"
+    {
+      "game"    "csgo"
+      "game"    "cstrike"
+    }
+
+    "Keys"
+    {
+      "Round Start"           "round_start"
+      "Round End"             "round_end"
+
+      "Player Kill"           "player_death"
+      "Player Kill - Client"  "attacker"
+      "Player Kill - Victim"  "userid"
+    }
+  }
+
   "tf"
   {
     "Keys"
     {
       "Round Start"           "teamplay_round_start"
       "Round End"             "teamplay_round_win"
-
-      "Player Kill"           "player_death"
-      "Player Kill - Client"  "attacker"
-      "Player Kill - Victim"  "userid"
-    }
-  }
-
-  "cstrike"
-  {
-    "Keys"
-    {
-      "Round Start"           "round_start"
-      "Round End"             "round_end"
-
-      "Player Kill"           "player_death"
-      "Player Kill - Client"  "attacker"
-      "Player Kill - Victim"  "userid"
-    }
-  }
-
-  "csgo"
-  {
-    "Keys"
-    {
-      "Round Start"           "round_start"
-      "Round End"             "round_end"
 
       "Player Kill"           "player_death"
       "Player Kill - Client"  "attacker"
