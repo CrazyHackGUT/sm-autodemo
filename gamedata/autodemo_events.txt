@@ -13,7 +13,7 @@
     "Keys"
     {
       "Round Start"           "teamplay_round_start"
-      "Round End"             "teamplay_round_end"
+      "Round End"             "teamplay_round_win"
 
       "Player Kill"           "player_death"
       "Player Kill - Client"  "attacker"
