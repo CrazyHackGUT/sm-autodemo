@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.2",
+  version     = "1.2.1",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -354,7 +354,7 @@ void Recorder_Start() {
 void Recorder_Stop() {
   Recorder_Validate();
 
-  Call_StartForward(g_hStartRecordFwd);
+  Call_StartForward(g_hStopRecordFwd);
   Call_PushString(g_szDemoName);
   Call_Finish();
 
