@@ -1,0 +1,62 @@
+language: c
+dist: bionic
+
+env:
+    - SMVERSION=1.8
+    - SMVERSION=1.9
+    - SMVERSION=1.10
+
+matrix:
+    fast_finish: true
+    allow_failures:
+    - env: SMVERSION=1.8
+
+before_install:
+    - sudo apt-get update
+    - sudo apt-get install gcc-multilib
+    - sudo apt-get install lib32stdc++6
+
+before_script:
+    # Make directory for SourceMod
+    - mkdir -p am/sm
+    - cd am/sm
+    - wget -q "http://www.sourcemod.net/latest.php?version=$SMVERSION&os=linux" -O sourcemod.tar.gz
+    - tar -xzf sourcemod.tar.gz
+
+    # Download git-helper script for generating defines, start him.
+    - wget -q https://raw.githubusercontent.com/CrazyHackGUT/sm-plugins/master/git.sh
+    - chmod +x git.sh
+    - ./git.sh > addons/sourcemod/scripting/AutoDemo.git.sp
+
+    # Go to scripting directory, exec chmod
+    - cd addons/sourcemod/scripting
+    - chmod +x spcomp
+    - chmod +x compile.sh
+
+    # Copy plugins, download dependencies
+    - cp -Rf ${TRAVIS_BUILD_DIR}/scripting/* ./
+    - mkdir -p include/ripext
+    - mkdir -p AutoDemo/optional
+    - curl "https://raw.githubusercontent.com/ErikMinekus/sm-ripext/master/pawn/scripting/include/ripext.inc" -o include/ripext.inc
+    - curl "https://raw.githubusercontent.com/ErikMinekus/sm-ripext/master/pawn/scripting/include/ripext/http.inc" -o include/ripext/http.inc
+    - curl "https://raw.githubusercontent.com/ErikMinekus/sm-ripext/master/pawn/scripting/include/ripext/json.inc" -o include/ripext/json.inc
+    - curl "https://raw.githubusercontent.com/peace-maker/sourcetvmanager/master/sourcetvmanager.inc" -o include/sourcetvmanager.inc
+
+script:
+    - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo.sp -E -oAutoDemo/Core
+    - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_EventManager.sp -E -oAutoDemo/EventManager
+    - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_TF2.sp -E -oAutoDemo/optional/TF2
+
+before_deploy:
+    - export CUSTOM_POSTFIX=_$SMVERSION
+    - mkdir -p $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/{gamedata,data/demos,scripting,plugins/AutoDemo}
+    - cp -Rf $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/scripting/
+    - cp -Rf $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/configs/GameX/
+    - cp -Rf AutoDemo/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/plugins/AutoDemo/
+    - cd $TRAVIS_BUILD_DIR
+    - wget --user=$HTTP_USER --password=$HTTP_PASSWORD $BASE_URL/travis.sh
+
+deploy:
+    - provider: script
+      skip_cleanup: true
+      script: bash travis.sh
