@@ -51,7 +51,7 @@ before_deploy:
     - export CUSTOM_POSTFIX=_$SMVERSION
     - mkdir -p $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/{gamedata,data/demos,scripting,plugins/AutoDemo}
     - cp -Rf $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/scripting/
-    - cp -Rf $TRAVIS_BUILD_DIR/configs/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/configs/GameX/
+    - cp -Rf $TRAVIS_BUILD_DIR/gamedata/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/gamedata/
     - cp -Rf AutoDemo/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/plugins/AutoDemo/
     - cd $TRAVIS_BUILD_DIR
     - wget --user=$HTTP_USER --password=$HTTP_PASSWORD $BASE_URL/travis.sh
