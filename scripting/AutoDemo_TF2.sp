@@ -24,7 +24,7 @@
 
 public Plugin myinfo = {
     description = "Extend event handling for Team Fortress 2",
-    version     = "1.0",
+    version     = "1.0.1",
     author      = "CrazyHackGUT",
     name        = "[AutoDemo] Team Fortress 2",
     url         = "https://kruzya.me"
@@ -53,8 +53,6 @@ public void OnPluginEnd()
 
 public bool HandleFakeDeaths(char[] szEventName, int iBufferLength, StringMap hEventDetails, Event &hEvent)
 {
-    // Write event if this death is not fake.
-    return !(
-        hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER
-    );
+    hEventDetails.SetString("isFakeDeath", hEvent.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER ? "1" : "0");
+    return true;
 }
