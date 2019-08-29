@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.1.2",
+  version     = "1.2",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -80,6 +80,9 @@ StringMap g_hCustom;
 
 Handle    g_hCorePlugin;
 
+Handle    g_hStartRecordFwd;
+Handle    g_hFinishRecordFwd;
+
 /**
  * @section Events
  */
@@ -98,6 +101,9 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
   CreateNative("DemoRec_SetDemoData", API_SetDemoData);
 
   RegPluginLibrary("AutoDemo");
+
+  g_hStartRecordFwd = CreateGlobalForward("DemoRec_OnRecordStart", ET_Ignore, Param_String);
+  g_hFinishRecordFwd = CreateGlobalForward("DemoRec_OnRecordStop", ET_Ignore, Param_String);
 
   g_hCorePlugin = hMySelf;
   g_hEventListeners = new StringMap();
@@ -339,10 +345,18 @@ void Recorder_Start() {
   for (int iClient = MaxClients; iClient != 0; --iClient)
     if (IsClientConnected(iClient) && IsClientAuthorized(iClient))
       OnClientAuthorized(iClient, NULL_STRING);
+
+  Call_StartForward(g_hStartRecordFwd);
+  Call_PushString(g_szDemoName);
+  Call_Finish();
 }
 
 void Recorder_Stop() {
   Recorder_Validate();
+
+  Call_StartForward(g_hStartRecordFwd);
+  Call_PushString(g_szDemoName);
+  Call_Finish();
 
   int iRecordedTicks = SourceTV_GetRecordingTick();
   SourceTV_StopRecording();

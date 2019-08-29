@@ -95,6 +95,20 @@ native void DemoRec_RemoveEventListener(const char[] szEventName, DemoRec_EventL
 native void DemoRec_SetDemoData(const char[] szField, const char[] szValue);
 
 /**
+ * Fires when a demo recording is started.
+ *
+ * @param szDemoId      Demo identifier.
+ */
+forward void DemoRec_OnRecordStart(const char[] szDemoId);
+
+/**
+ * Fires when a demo recording is stopped.
+ *
+ * @param szDemoId      Demo identifier.
+ */
+forward void DemoRec_OnRecordStop(const char[] szDemoId);
+
+/**
  * DO NOT EDIT ANYTHING AFTER THIS LINES!
  */
 public SharedPlugin __pl_AutoDemo = {
@@ -124,5 +138,9 @@ public void __pl_AutoDemo_SetNTVOptional() {
 
   // v1.1.2
   MarkNativeAsOptional("DemoRec_SetDemoData");
+
+  // v1.2
+  // forward void DemoRec_OnRecordStop();
+  // forward void DemoRec_OnRecordStart();
 }
 #endif
