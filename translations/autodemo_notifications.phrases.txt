@@ -1,0 +1,16 @@
+"Phrases"
+{
+    "RecordStart"
+    {
+        "#format"       "{1:s}"
+        "en"            "[AutoDemo] Recording started. Demo identifier: {1}"
+        "ru"            "[AutoDemo] Запись запущена. Идентификатор: {1}"
+    }
+
+    "RecordStop"
+    {
+        "#format"       "{1:s}"
+        "en"            "[AutoDemo] Recording stopped. Demo identifier: {1}"
+        "ru"            "[AutoDemo] Запись остановлена. Идентификатор: {1}"
+    }
+}

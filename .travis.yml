@@ -46,13 +46,15 @@ script:
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo.sp -E -oAutoDemo/Core
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_EventManager.sp -E -oAutoDemo/EventManager
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_TF2.sp -E -oAutoDemo/optional/TF2
+    - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_Notify.sp -E -oAutoDemo/optional/ChatNotifications
 
 before_deploy:
     - export CUSTOM_POSTFIX=_$SMVERSION
-    - mkdir -p $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/{gamedata,data/demos,scripting,plugins/AutoDemo}
+    - mkdir -p $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/{gamedata,data/demos,scripting,plugins/AutoDemo,translations}
     - cp -Rf $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/scripting/
     - cp -Rf $TRAVIS_BUILD_DIR/gamedata/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/gamedata/
     - cp -Rf AutoDemo/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/plugins/AutoDemo/
+    - cp -Rf $TRAVIS_BUILD_DIR/translations/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/translations/
     - cd $TRAVIS_BUILD_DIR
     - wget --user=$HTTP_USER --password=$HTTP_PASSWORD $BASE_URL/travis.sh
 
