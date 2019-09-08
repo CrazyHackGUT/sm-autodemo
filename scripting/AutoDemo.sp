@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.2.2",
+  version     = "1.2.3",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -72,7 +72,6 @@ ArrayList g_hUniquePlayers;
 char      g_szDemoName[64];
 char      g_szMapName[PLATFORM_MAX_PATH];
 int       g_iStartTime;
-int       g_iStartTick;
 bool      g_bRecording;
 int       g_iEndTime;
 ArrayList g_hEvents;
@@ -187,7 +186,7 @@ public int API_TriggerEvent(Handle hPlugin, int iNumParams) {
   DataPack hPack = new DataPack();
   hPack.WriteString(szEventName);
   hPack.WriteCell(GetTime());
-  hPack.WriteCell(GetGameTickCount() - g_iStartTick);
+  hPack.WriteCell(SourceTV_GetRecordingTick());
   hPack.WriteCell(hEventData);
   g_hEvents.Push(hPack);
 }
@@ -340,7 +339,6 @@ void Recorder_Start() {
   g_hUniquePlayers = new ArrayList(ByteCountToCells(4));
   g_hEvents = new ArrayList(ByteCountToCells(4));
   g_hCustom = new StringMap();
-  g_iStartTick = GetGameTickCount();
 
   for (int iClient = MaxClients; iClient != 0; --iClient)
     if (IsClientConnected(iClient) && IsClientAuthorized(iClient))
