@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.5",
+  version     = "1.0.8",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -38,8 +38,8 @@ char    g_szKillClient[32];
 char    g_szKillVictim[32];
 char    g_szKill[64];
 
-ConVar  g_hRecordMode;
-int     g_iRecordMode;
+ConVar  g_hRecordMode, g_hMinPlayers;
+int     g_iRecordMode, g_iMinPlayers;
 
 bool    g_bRoundRecord = true;
 
@@ -76,18 +76,27 @@ public void OnPluginStart()
   hGameConf.Close();
 
   g_hRecordMode = CreateConVar("sm_autodemo_recordmode", "1", "0 - disabled\n1 - record maps\n2 - record events", _, true, 0.0, true, 2.0);
+  g_hMinPlayers = CreateConVar("sm_autodemo_minplayers", "4", "Player count required for starting record\nNOTE: This value for map recording works different. Demo stops in end round if limit isn't completes, and starts in start round.", _, true, 0.0);
   HookConVarChange(g_hRecordMode, OnRecordModeChanged);
+  HookConVarChange(g_hMinPlayers, OnMinPlayersChanged);
 }
 
 public void OnMapStart()
 {
-  RequestFrame(OnMapStart_Post);
+  // Try skip first 1000 ticks.
+  RequestFrame(OnMapStart_Post, 1000);
 }
 
 public void OnMapStart_Post(any data)
 {
+  if (data != 0)
+  {
+    RequestFrame(OnMapStart_Post, data-1);
+    return;
+  }
+
   bool bIsRecording = DemoRec_IsRecording();
-  if (g_iRecordMode == 1 && !bIsRecording)
+  if (g_iRecordMode == 1 && !bIsRecording && UTIL_CheckPlayers())
   {
     DemoRec_StartRecord();
     bIsRecording = true;
@@ -150,6 +159,7 @@ public void OnClientSayCommand_Post(int iClient, const char[] szChatType, const 
 public void OnConfigsExecuted()
 {
   OnRecordModeChanged(null, NULL_STRING, NULL_STRING);
+  OnMinPlayersChanged(null, NULL_STRING, NULL_STRING);
 }
 
 /**
@@ -168,6 +178,21 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
     {
       bIsRoundStart && DemoRec_TriggerEvent("Core:RoundStart");
       bIsRoundEnd   && DemoRec_TriggerEvent("Core:RoundEnd");
+    }
+
+    if (g_iRecordMode == 2)
+    {
+      bool bCheckResult = UTIL_CheckPlayers();
+      if (bIsRoundStart && bIsRecording && !bCheckResult)
+      {
+        DemoRec_StopRecord();
+        LogMessage("Recording stopped because required player count is not suit now");
+      }
+      else if (bIsRoundEnd && !bIsRecording && bCheckResult)
+      {
+        DemoRec_StartRecord();
+        LogMessage("Recording started because required player count is received");
+      }
     }
 
     if (!g_bRoundRecord || g_iRecordMode != 2)
@@ -200,6 +225,11 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
   DemoRec_TriggerEvent("Core:PlayerDeath", hEventDetails, hEvent);
 
   hEventDetails.Close();
+}
+
+public void OnMinPlayersChanged(ConVar hConVar, const char[] szOV, const char[] szNV)
+{
+  g_iMinPlayers = g_hMinPlayers.IntValue;
 }
 
 public void OnRecordModeChanged(ConVar hConVar, const char[] szOV, const char[] szNV)
@@ -247,6 +277,43 @@ public void OnRecordModeChanged(ConVar hConVar, const char[] szOV, const char[] 
 /**
  * @section UTILs
  */
+bool UTIL_CheckPlayers()
+{
+  if (g_iMinPlayers < 1)
+  {
+    return true;
+  }
+
+  return g_iMinPlayers < UTIL_GetClientCount();
+}
+
+// Default GetClientCount() is not suit our requirements.
+// So we implement own client counter.
+int UTIL_GetClientCount(bool bInGameOnly = true, bool bWithSpectators = false)
+{
+  int iClients = 0;
+  for (int iClient = MaxClients; iClient != 0; --iClient)
+  {
+    if (!IsClientConnected(iClient))
+    {
+      continue;
+    }
+
+    if (bInGameOnly == false || !IsClientInGame(iClient))
+    {
+      continue;
+    }
+
+    if (bWithSpectators == false || GetClientTeam(iClient) > 2) // 2 - red team (terrorists for CS, RED for TF2)
+    {
+      continue;
+    }
+
+    iClients++;
+  }
+
+  return iClients;
+}
 
 bool UTIL_GetEventName(Handle hGameConf, const char[] szEventName, char[] szBuffer, int iBufferLength)
 {
