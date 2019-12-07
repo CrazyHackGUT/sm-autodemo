@@ -42,11 +42,17 @@ before_script:
     - curl "https://raw.githubusercontent.com/ErikMinekus/sm-ripext/master/pawn/scripting/include/ripext/json.inc" -o include/ripext/json.inc
     - curl "https://raw.githubusercontent.com/peace-maker/sourcetvmanager/master/sourcetvmanager.inc" -o include/sourcetvmanager.inc
 
+    # For FTP Uploading...
+    - curl "https://raw.githubusercontent.com/thraaawn/SMbz2/master/pawn/scripting/include/bzip2.inc" -o include/bzip2.inc
+    - curl "https://raw.githubusercontent.com/thepparker/sourcemod/master/scripting/include/cURL.inc" -o include/cURL.inc
+    - curl "https://raw.githubusercontent.com/thepparker/sourcemod/master/scripting/include/cURL_header.inc" -o include/cURL_header.inc
+
 script:
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo.sp -E -oAutoDemo/Core
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_EventManager.sp -E -oAutoDemo/EventManager
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_TF2.sp -E -oAutoDemo/optional/TF2
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_Notify.sp -E -oAutoDemo/optional/ChatNotifications
+    - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_FTPUpload.sp -E -oAutoDemo/optional/FTPUpload
 
 before_deploy:
     - export CUSTOM_POSTFIX=_$SMVERSION

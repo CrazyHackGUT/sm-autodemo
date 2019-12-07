@@ -36,3 +36,8 @@ tv_maxclients 0
 tv_name "AutoDemo"
 tv_port 27020
 ```
+
+## Great thanks
+- [Erik Minekus](https://forums.alliedmods.net/member.php?u=34668) for developing REST in Pawn.
+- [Peace-Maker](https://forums.alliedmods.net/member.php?u=41418) for developing SourceTV Manager.
+- [Se7en](https://github.com/Se7en-RU) for providing own demo auto-uploader with cURL by FTP (called as `UploadFTP`).
