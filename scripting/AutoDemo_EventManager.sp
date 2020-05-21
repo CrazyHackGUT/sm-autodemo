@@ -304,7 +304,7 @@ int UTIL_GetClientCount(bool bInGameOnly = true, bool bWithSpectators = false)
       continue;
     }
 
-    if (bWithSpectators == true && GetClientTeam(iClient) > 2) // 2 - red team (terrorists for CS, RED for TF2)
+    if (bWithSpectators == true && GetClientTeam(iClient) < 2) // 2 - red team (terrorists for CS, RED for TF2)
     {
       continue;
     }
