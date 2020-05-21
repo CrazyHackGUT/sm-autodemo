@@ -284,7 +284,7 @@ bool UTIL_CheckPlayers()
     return true;
   }
 
-  return g_iMinPlayers < UTIL_GetClientCount();
+  return g_iMinPlayers <= UTIL_GetClientCount();
 }
 
 // Default GetClientCount() is not suit our requirements.
@@ -299,12 +299,12 @@ int UTIL_GetClientCount(bool bInGameOnly = true, bool bWithSpectators = false)
       continue;
     }
 
-    if (bInGameOnly == false || !IsClientInGame(iClient))
+    if (bInGameOnly == true && !IsClientInGame(iClient))
     {
       continue;
     }
 
-    if (bWithSpectators == false || GetClientTeam(iClient) > 2) // 2 - red team (terrorists for CS, RED for TF2)
+    if (bWithSpectators == true && GetClientTeam(iClient) > 2) // 2 - red team (terrorists for CS, RED for TF2)
     {
       continue;
     }
