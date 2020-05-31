@@ -1,6 +1,6 @@
 #include <sourcemod>
 #include <AutoDemo>
-#include <curl>
+#include <cURL>
 #include <bzip2>
 
 #define SSL CURLUSESSL_NONE // CURLUSESSL_TRY
