@@ -180,7 +180,7 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
       bIsRoundEnd   && DemoRec_TriggerEvent("Core:RoundEnd");
     }
 
-    if (g_iRecordMode == 2)
+    if (g_iRecordMode == 1)
     {
       bool bCheckResult = UTIL_CheckPlayers();
       if (bIsRoundStart && bIsRecording && !bCheckResult)
