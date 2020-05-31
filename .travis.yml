@@ -5,11 +5,13 @@ env:
     - SMVERSION=1.8
     - SMVERSION=1.9
     - SMVERSION=1.10
+    - SMVERSION=1.11
 
 matrix:
     fast_finish: true
     allow_failures:
     - env: SMVERSION=1.8
+    - env: SMVERSION=1.9
 
 before_install:
     - sudo apt-get update
@@ -44,8 +46,8 @@ before_script:
 
     # For FTP Uploading...
     - curl "https://raw.githubusercontent.com/thraaawn/SMbz2/master/pawn/scripting/include/bzip2.inc" -o include/bzip2.inc
-    - curl "https://raw.githubusercontent.com/thepparker/sourcemod/master/scripting/include/cURL.inc" -o include/cURL.inc
-    - curl "https://raw.githubusercontent.com/thepparker/sourcemod/master/scripting/include/cURL_header.inc" -o include/cURL_header.inc
+    - curl "https://raw.githubusercontent.com/JoinedSenses/SourceMod-IncludeLibrary/master/include/cURL.inc" -o include/cURL.inc
+    - curl "https://raw.githubusercontent.com/JoinedSenses/SourceMod-IncludeLibrary/master/include/cURL_header.inc" -o include/cURL_header.inc
 
 script:
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo.sp -E -oAutoDemo/Core
