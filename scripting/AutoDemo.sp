@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.2.3",
+  version     = "1.2.4",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -499,7 +499,7 @@ JSONObject UTIL_StringMapToJSON(StringMap hMap) {
   return hJSON;
 }
 
-bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap hMap, any data)
+bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap &hMap, any &data)
 {
   ArrayList hListeners;
   if (!g_hEventListeners.GetValue(szEventName, hListeners))
@@ -507,6 +507,14 @@ bool UTIL_TriggerEventListeners(char[] szEventName, int iBufferLength, StringMap
     // event listeners is not registered for this event.
     // so just allow writing this event.
     return true;
+  }
+
+  // Setup StringMap with event details, if it doesn't exists.
+  // We're should guarantee for our plugin listeners in existing
+  // this handle.
+  if (hMap == null)
+  {
+    hMap = new StringMap();
   }
 
   // Call all listeners.

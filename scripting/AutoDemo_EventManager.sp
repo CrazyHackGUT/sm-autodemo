@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.8",
+  version     = "1.0.9",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -176,8 +176,8 @@ public void OnEventTriggered(Event hEvent, const char[] szEventName, bool bDontB
   {
     if (bIsRecording)
     {
-      bIsRoundStart && DemoRec_TriggerEvent("Core:RoundStart");
-      bIsRoundEnd   && DemoRec_TriggerEvent("Core:RoundEnd");
+      bIsRoundStart && DemoRec_TriggerEvent("Core:RoundStart", null, hEvent);
+      bIsRoundEnd   && DemoRec_TriggerEvent("Core:RoundEnd", null, hEvent);
     }
 
     if (g_iRecordMode == 1)
