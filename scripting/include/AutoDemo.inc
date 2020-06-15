@@ -42,6 +42,19 @@ native void DemoRec_StopRecord();
 native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = null, any data = 0);
 
 /**
+ * Get a custom field for client.
+ *
+ * @param iClient       Client identifier.
+ * @param szKey         Key name.
+ * @param szBuffer      Buffer for writing value.
+ * @param iMaxLength    Max length for buffer.
+ *
+ * @error Client is invalid or bot.
+ * @return  True if custom field is present in map, false if not.
+ */
+native bool DemoRec_GetClientData(int iClient, const char[] szKey, char[] szBuffer, int iMaxLength);
+
+/**
  * Adds a custom field for client.
  *
  * @param iClient       Client identifier.
