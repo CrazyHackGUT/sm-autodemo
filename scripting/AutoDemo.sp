@@ -92,6 +92,7 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
   CreateNative("DemoRec_StartRecord",   API_StartRecord);
   CreateNative("DemoRec_StopRecord",    API_StopRecord);
 
+  CreateNative("DemoRec_GetClientData", API_GetClientData);
   CreateNative("DemoRec_SetClientData", API_SetClientData);
 
   CreateNative("DemoRec_AddEventListener",    API_AddEventListener);
@@ -154,6 +155,61 @@ public void OnClientAuthorized(int iClient, const char[] szAuth) {
   hPack.WriteCell(new StringMap());
   hPack.WriteString(szName);
   g_hUniquePlayers.Push(hPack);
+}
+
+/**
+ * @section Helper functions for API
+ */
+static int API_AssertIsValidClientByParamID(int iParamId = 1)
+{
+  int iClient = GetNativeCell(iParamId);
+  API_AssertIsValidClient(iClient);
+
+  return iClient;
+}
+
+static void API_AssertIsValidClient(int iClient)
+{
+  if (0 < iClient || iClient > MaxClients)
+  {
+    ThrowNativeError(SP_ERROR_NATIVE, "Client ID %d is invalid", iClient);
+  }
+
+  if (IsFakeClient(iClient))
+  {
+    ThrowNativeError(SP_ERROR_NATIVE, "Client %d is a bot", iClient);
+  }
+}
+
+static void API_AssertIsValidHandle(Handle hHandle, const char[] szFormatStr, any ...)
+{
+  if (hHandle)
+  {
+    return;
+  }
+
+  char szErrorBuffer[512];
+  VFormat(szErrorBuffer, sizeof(szErrorBuffer), szFormatStr, 3);
+  ThrowNativeError(SP_ERROR_NATIVE, "%s", szErrorBuffer);
+}
+
+static DataPack API_GetClientPack(int iAccountID)
+{
+  // Find client in ArrayList.
+  DataPack hClient;
+  int iClientCount = g_hUniquePlayers.Length;
+  for (int iClientId = 0; iClientId < iClientCount && !hClient; ++iClientId)
+  {
+    hClient = g_hUniquePlayers.Get(iClientId);
+    hClient.Reset();
+
+    if (hClient.ReadCell() == iAccountID)
+    {
+      return hClient;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -271,6 +327,41 @@ public int API_StopRecord(Handle hPlugin, int iNumParams) {
  * Params for this native:
  * -> iClient
  * -> szKey
+ * -> szBuffer
+ * -> iLength
+ */
+public int API_GetClientData(Handle hPlugin, int iNumParams)
+{
+  if (!g_bRecording)
+    return 0;
+
+  int iClient = API_AssertIsValidClientByParamID(1);
+  int iAccountID = GetSteamAccountID(iClient);
+
+  // Find client in ArrayList.
+  DataPack hClient = API_GetClientPack(iAccountID);
+  API_AssertIsValidHandle(hClient, "Couldn't find client %L in registered players", iClient);
+
+  char szKey[128];
+  char szValue[512];
+
+  GetNativeString(2, szKey, sizeof(szKey));
+  StringMap hMap = view_as<StringMap>(hClient.ReadCell());
+  API_AssertIsValidHandle(hMap, "Handle %x with client data %L is invalid", hMap, iClient);
+
+  if (hMap.GetString(szKey, szValue, sizeof(szValue)))
+  {
+    SetNativeString(3, szValue, GetNativeCell(4), true);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Params for this native:
+ * -> iClient
+ * -> szKey
  * -> szValue
  * -> bRewrite
  */
@@ -279,37 +370,12 @@ public int API_SetClientData(Handle hPlugin, int iNumParams)
   if (!g_bRecording)
     return 0;
 
-  int iClient = GetNativeCell(1);
-  if (0 < iClient || iClient > MaxClients)
-  {
-    return ThrowNativeError(SP_ERROR_NATIVE, "Client ID %d is invalid", iClient);
-  }
-
-  if (IsFakeClient(iClient))
-  {
-    return ThrowNativeError(SP_ERROR_NATIVE, "Client %d is a bot", iClient);
-  }
-
+  int iClient = API_AssertIsValidClientByParamID(1);
   int iAccountID = GetSteamAccountID(iClient);
 
   // Find client in ArrayList.
-  DataPack hClient;
-  int iClientCount = g_hUniquePlayers.Length;
-  for (int iClientId = 0; iClientId < iClientCount && !hClient; ++iClientId)
-  {
-    hClient = g_hUniquePlayers.Get(iClientId);
-    hClient.Reset();
-
-    if (hClient.ReadCell() != iAccountID)
-    {
-      hClient = null;
-    }
-  }
-
-  if (!hClient)
-  {
-    return ThrowNativeError(SP_ERROR_NATIVE, "Couldn't find client %d is registered players", iClient);
-  }
+  DataPack hClient = API_GetClientPack(iAccountID);
+  API_AssertIsValidHandle(hClient, "Couldn't find client %L in registered players", iClient);
 
   char szKey[128];
   char szValue[512];
@@ -318,6 +384,8 @@ public int API_SetClientData(Handle hPlugin, int iNumParams)
   GetNativeString(3, szValue, sizeof(szValue));
 
   StringMap hMap = hClient.ReadCell();
+  API_AssertIsValidHandle(hMap, "Handle %x with client data %L is invalid", hMap, iClient);
+
   hMap.SetString(szKey, szValue, GetNativeCell(4));
   return 0;
 }
