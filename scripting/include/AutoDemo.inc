@@ -36,7 +36,8 @@ native void DemoRec_StopRecord();
  * @param hData         StringMap with any custom data. We support only string in values.
  *                      Optional.
  * @param data          Any custom data for event listeners.
- * @note                We clones your StringMap, if he passed to function. So, please, close StringMap handle after passing.
+ * @note                We clones your StringMap, if he passed to function. So, please,
+ *                      close StringMap handle after passing.
  * @noreturn
  */
 native void DemoRec_TriggerEvent(const char[] szEventName, StringMap hData = null, any data = 0);
@@ -76,7 +77,7 @@ native void DemoRec_SetClientData(int iClient, const char[] szKey, const char[] 
  * @param hEventDetails Event details.
  * @param data          Any custom data from event creator.
  *
- * @return  True if event should be written, false if blocked. 
+ * @return True if event should be written, false if blocked.
  */
 typedef DemoRec_EventListener = function bool (char[] szEventName, int iBufferLength, StringMap hEventDetails, any &data);
 
@@ -122,6 +123,16 @@ forward void DemoRec_OnRecordStart(const char[] szDemoId);
 forward void DemoRec_OnRecordStop(const char[] szDemoId);
 
 /**
+ * Fires when a client is authorized, before writing to metadata. This can be
+ * used to block client writing (by any reasons).
+ *
+ * @param iClient       Client identifier.
+ * @return Any value lower than Plugin_Handled allows writing; equal or higher
+ *         - blocks.
+ */
+forward Action DemoRec_OnClientPreRecordCheck(int iClient);
+
+/**
  * DO NOT EDIT ANYTHING AFTER THIS LINES!
  */
 public SharedPlugin __pl_AutoDemo = {
@@ -155,5 +166,9 @@ public void __pl_AutoDemo_SetNTVOptional() {
   // v1.2
   // forward void DemoRec_OnRecordStop();
   // forward void DemoRec_OnRecordStart();
+
+  // v1.2.5
+  MarkNativeAsOptional("DemoRec_GetClientData");
+  // forward Action DemoRec_OnClientPreRecordCheck(int iClient);
 }
 #endif

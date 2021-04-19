@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.2.4",
+  version     = "1.2.5",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -81,6 +81,7 @@ Handle    g_hCorePlugin;
 
 Handle    g_hStartRecordFwd;
 Handle    g_hFinishRecordFwd;
+Handle    g_hShouldWriteClientFwd;
 
 /**
  * @section Events
@@ -104,6 +105,7 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
 
   g_hStartRecordFwd = CreateGlobalForward("DemoRec_OnRecordStart", ET_Ignore, Param_String);
   g_hFinishRecordFwd = CreateGlobalForward("DemoRec_OnRecordStop", ET_Ignore, Param_String);
+  g_hShouldWriteClientFwd = CreateGlobalForward("DemoRec_OnClientPreRecordCheck", ET_Event, Param_Cell);
 
   g_hCorePlugin = hMySelf;
   g_hEventListeners = new StringMap();
@@ -124,7 +126,12 @@ public void OnMapEnd() {
 
 public void OnClientAuthorized(int iClient, const char[] szAuth) {
   // Don't write in metadata any bot.
-  if (IsFakeClient(iClient) || !g_bRecording)
+  if (!g_bRecording)
+  {
+    return;
+  }
+
+  if (!API_IsShouldBeWrittenToMetadata(iClient))
   {
     return;
   }
@@ -388,6 +395,17 @@ public int API_SetClientData(Handle hPlugin, int iNumParams)
 
   hMap.SetString(szKey, szValue, GetNativeCell(4));
   return 0;
+}
+
+bool API_IsShouldBeWrittenToMetadata(int iClient)
+{
+  Action eResult;
+
+  Call_StartForward(g_hShouldWriteClientFwd);
+  Call_PushCell(iClient);
+  Call_Finish(eResult);
+
+  return eResult < Plugin_Handled;
 }
 
 /**

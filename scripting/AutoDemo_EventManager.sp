@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.9",
+  version     = "1.0.10",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -272,6 +272,13 @@ public void OnRecordModeChanged(ConVar hConVar, const char[] szOV, const char[] 
     g_hRecordMode.IntValue = 0;
     return;
   }
+}
+
+public Action DemoRec_OnClientPreRecordCheck(int iClient)
+{
+  return IsFakeClient(iClient) ?
+    Plugin_Handled :
+    Plugin_Continue;
 }
 
 /**
