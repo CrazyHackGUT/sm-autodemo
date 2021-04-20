@@ -177,7 +177,7 @@ static int API_AssertIsValidClientByParamID(int iParamId = 1)
 
 static void API_AssertIsValidClient(int iClient)
 {
-  if (0 < iClient || iClient > MaxClients)
+  if (0 > iClient || iClient > MaxClients)
   {
     ThrowNativeError(SP_ERROR_NATIVE, "Client ID %d is invalid", iClient);
   }
@@ -210,13 +210,13 @@ static DataPack API_GetClientPack(int iAccountID)
     hClient = g_hUniquePlayers.Get(iClientId);
     hClient.Reset();
 
-    if (hClient.ReadCell() == iAccountID)
+    if (hClient.ReadCell() != iAccountID)
     {
-      return hClient;
+      hClient = null;
     }
   }
 
-  return null;
+  return hClient;
 }
 
 /**
