@@ -45,28 +45,29 @@ before_script:
     - curl "https://raw.githubusercontent.com/peace-maker/sourcetvmanager/master/sourcetvmanager.inc" -o include/sourcetvmanager.inc
 
     # For FTP Uploading...
-    - curl "https://raw.githubusercontent.com/thraaawn/SMbz2/master/pawn/scripting/include/bzip2.inc" -o include/bzip2.inc
-    - curl "https://raw.githubusercontent.com/JoinedSenses/SourceMod-IncludeLibrary/master/include/cURL.inc" -o include/cURL.inc
-    - curl "https://raw.githubusercontent.com/JoinedSenses/SourceMod-IncludeLibrary/master/include/cURL_header.inc" -o include/cURL_header.inc
+    # - curl "https://raw.githubusercontent.com/thraaawn/SMbz2/master/pawn/scripting/include/bzip2.inc" -o include/bzip2.inc
+    # - curl "https://raw.githubusercontent.com/JoinedSenses/SourceMod-IncludeLibrary/master/include/cURL.inc" -o include/cURL.inc
+    # - curl "https://raw.githubusercontent.com/JoinedSenses/SourceMod-IncludeLibrary/master/include/cURL_header.inc" -o include/cURL_header.inc
 
 script:
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo.sp -E -oAutoDemo/Core
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_EventManager.sp -E -oAutoDemo/EventManager
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_TF2.sp -E -oAutoDemo/optional/TF2
     - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_Notify.sp -E -oAutoDemo/optional/ChatNotifications
-    - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_FTPUpload.sp -E -oAutoDemo/optional/FTPUpload
+    # - ./spcomp $COMPILER_PARAMS AutoDemo.git.sp AutoDemo_FTPUpload.sp -E -oAutoDemo/optional/FTPUpload
 
 before_deploy:
-    - export CUSTOM_POSTFIX=_$SMVERSION
-    - mkdir -p $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/{gamedata,data/demos,scripting,plugins/AutoDemo,translations}
-    - cp -Rf $TRAVIS_BUILD_DIR/scripting/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/scripting/
-    - cp -Rf $TRAVIS_BUILD_DIR/gamedata/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/gamedata/
-    - cp -Rf AutoDemo/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/plugins/AutoDemo/
-    - cp -Rf $TRAVIS_BUILD_DIR/translations/* $TRAVIS_BUILD_DIR/../$SFTP_SOURCE_DIRECTORY/addons/sourcemod/translations/
+    - export FILENAME=sm_autodemo.${TRAVIS_COMMIT:0:7}.${SMVERSION}.tar.gz
+    - export PACKAGE_PATH=${TRAVIS_BUILD_DIR}/../package
+    - mkdir -p $PACKAGE_PATH/addons/sourcemod/{gamedata,data/demos,scripting,plugins/AutoDemo,translations}
+    - cp -Rf $TRAVIS_BUILD_DIR/scripting/* $PACKAGE_PATH/addons/sourcemod/scripting/
+    - cp -Rf $TRAVIS_BUILD_DIR/gamedata/* $PACKAGE_PATH/addons/sourcemod/gamedata/
+    - cp -Rf AutoDemo/* $PACKAGE_PATH/addons/sourcemod/plugins/AutoDemo/
+    - cp -Rf $TRAVIS_BUILD_DIR/translations/* $PACKAGE_PATH/addons/sourcemod/translations/
     - cd $TRAVIS_BUILD_DIR
-    - wget --user=$HTTP_USER --password=$HTTP_PASSWORD $BASE_URL/travis.sh
+    - tar -cvf ../${FILENAME} ${PACKAGE_PATH}
 
 deploy:
     - provider: script
       skip_cleanup: true
-      script: bash travis.sh
+      script: curl "${API_URL}?secret_key=${API_KEY}&tags=SourceMod%20${SMVERSION}" -F "artifact=@./../${FILENAME}"
