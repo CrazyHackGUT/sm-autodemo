@@ -28,6 +28,15 @@ native void DemoRec_StartRecord();
 native void DemoRec_StopRecord();
 
 /**
+ * Retrieves a directory where demo records is placed.
+ *
+ * @param szBuffer      Buffer for writing value.
+ * @param iMaxLength    Max length for buffer.
+ * @return              Written bytes count.
+ */
+native int DemoRec_GetDataDirectory(char[] szBuffer, int iBufferLength);
+
+/**
  * Adds a event to metainfo for demo.
  *
  * @param szEventName   Event name for including in JSON.
@@ -170,5 +179,8 @@ public void __pl_AutoDemo_SetNTVOptional() {
   // v1.2.5
   MarkNativeAsOptional("DemoRec_GetClientData");
   // forward Action DemoRec_OnClientPreRecordCheck(int iClient);
+
+  // v1.3
+  MarkNativeAsOptional("DemoRec_GetDataDirectory");
 }
 #endif

@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.2.5",
+  version     = "1.3",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -93,6 +93,8 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
   CreateNative("DemoRec_StartRecord",   API_StartRecord);
   CreateNative("DemoRec_StopRecord",    API_StopRecord);
 
+  CreateNative("DemoRec_GetDataDirectory", API_GetDataDirectory);
+
   CreateNative("DemoRec_GetClientData", API_GetClientData);
   CreateNative("DemoRec_SetClientData", API_SetClientData);
 
@@ -112,7 +114,8 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
 }
 
 public void OnAllPluginsLoaded() {
-  BuildPath(Path_SM, g_szBaseDemoPath, sizeof(g_szBaseDemoPath), "data/demos/");
+  // TODO: expose to config?
+  BuildPath(Path_SM, g_szBaseDemoPath, sizeof(g_szBaseDemoPath), "data/demos");
 }
 
 public void OnMapStart() {
@@ -304,7 +307,8 @@ public int API_SetDemoData(Handle hPlugin, int iNumParams)
  * Params for this native:
  * null
  */
-public int API_IsRecording(Handle hPlugin, int iNumParams) {
+public int API_IsRecording(Handle hPlugin, int iNumParams)
+{
   return g_bRecording;
 }
 
@@ -312,7 +316,8 @@ public int API_IsRecording(Handle hPlugin, int iNumParams) {
  * Params for this native:
  * null
  */
-public int API_StartRecord(Handle hPlugin, int iNumParams) {
+public int API_StartRecord(Handle hPlugin, int iNumParams)
+{
   if (g_bRecording)
     return;
 
@@ -323,11 +328,23 @@ public int API_StartRecord(Handle hPlugin, int iNumParams) {
  * Params for this native:
  * null
  */
-public int API_StopRecord(Handle hPlugin, int iNumParams) {
+public int API_StopRecord(Handle hPlugin, int iNumParams)
+{
   if (!g_bRecording)
     return;
 
   Recorder_Stop();
+}
+
+/**
+ * Params for this native:
+ *
+ * -> szBuffer
+ * -> iLength
+ */
+public int API_GetDataDirectory(Handle hPlugin, int iNumParams)
+{
+  return SetNativeString(1, g_szBaseDemoPath, GetNativeCell(2));
 }
 
 /**
