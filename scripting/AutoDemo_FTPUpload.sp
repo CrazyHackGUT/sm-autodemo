@@ -6,12 +6,10 @@
 #define SSL CURLUSESSL_NONE // CURLUSESSL_TRY
 
 public Plugin myinfo = {
-    version     = "1.0",
-    author      = "Se7en",
+    version     = "1.0.1",
+    author      = "Se7en, CrazyHackGUT aka Kruzya",
     name        = "[AutoDemo] FTP Upload",
 };
-
-char g_szBaseDemoPath[PLATFORM_MAX_PATH];
 
 Handle g_hFile;
 
@@ -55,10 +53,6 @@ public void OnPluginStart()
 	AutoExecConfig(true, "autodemo_upload");
 }
 
-public void OnAllPluginsLoaded() {
-	BuildPath(Path_SM, g_szBaseDemoPath, sizeof(g_szBaseDemoPath), "data/demos/");
-}
-
 public void DemoRec_OnRecordStop(const char[] szDemoId)
 {
 	char szFileName[64];
@@ -69,9 +63,12 @@ public void DemoRec_OnRecordStop(const char[] szDemoId)
 
 void uploadFile(const char[] sFile)
 {
+	char szBaseDemoPath[192];
+	DemoRec_GetDataDirectory(szBaseDemoPath, sizeof(szBaseDemoPath));
+
 	char szFile[192];
 	char szFileBz2[192];
-	FormatEx(szFile, sizeof(szFile), "%s/%s", g_szBaseDemoPath, sFile);
+	FormatEx(szFile, sizeof(szFile), "%s/%s", szBaseDemoPath, sFile);
 	FormatEx(szFileBz2, sizeof(szFileBz2), "%s.bz2", szFile);
 
 	Handle hTrie = CreateTrie();
