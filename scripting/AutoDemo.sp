@@ -29,7 +29,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.3",
+  version     = "1.3.1",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -505,7 +505,7 @@ void Recorder_Stop() {
   }
   hMetaInfo.Set("players", hPlayers);
   hPlayers.Close();
-  g_hUniquePlayers.Clear();
+  g_hUniquePlayers.Close();
 
   // add events.
   char szEventName[64];
