@@ -4,6 +4,7 @@
     {
         "#format"       "{1:s}"
         "en"            "[AutoDemo] Recording started. Demo identifier: {1}"
+        "pt"            "[AutoDemo] Gravação começou. ID Demo: {1}"
         "ru"            "[AutoDemo] Запись запущена. Идентификатор: {1}"
     }
 
@@ -11,6 +12,7 @@
     {
         "#format"       "{1:s}"
         "en"            "[AutoDemo] Recording stopped. Demo identifier: {1}"
+        "pt"            "[AutoDemo] Gravação foi interrompida.. ID Demo: {1}"
         "ru"            "[AutoDemo] Запись остановлена. Идентификатор: {1}"
     }
 }
