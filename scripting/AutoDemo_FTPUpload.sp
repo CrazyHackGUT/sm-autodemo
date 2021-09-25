@@ -35,19 +35,19 @@ int CURL_Default_Opt[][2] = {
 
 public void OnPluginStart()
 {
-	g_hUploadHost = CreateConVar("sm_demo_host", "", "Адрес FTP хоста"); 
+	g_hUploadHost = CreateConVar("sm_demo_host", "", "Host FTP Address"); 
 	g_hUploadHost.GetString(g_sUploadHost, sizeof(g_sUploadHost));
 
-	g_hUploadPort = CreateConVar("sm_demo_port", "21", "Порт FTP хоста");
+	g_hUploadPort = CreateConVar("sm_demo_port", "21", "Host FTP Port");
 	g_iUploadPort = g_hUploadPort.IntValue;
 
-	g_hUploadUser = CreateConVar("sm_demo_user", "", "Пользователь FTP хоста");
+	g_hUploadUser = CreateConVar("sm_demo_user", "", "Host FTP User");
 	g_hUploadUser.GetString(g_sUploadUser, sizeof(g_sUploadUser));
 
-	g_hUploadPassword = CreateConVar("sm_demo_password", "", "Пароль FTP хоста");
+	g_hUploadPassword = CreateConVar("sm_demo_password", "", "Host FTP Password");
 	g_hUploadPassword.GetString(g_sUploadPassword, sizeof(g_sUploadPassword));
 
-	g_hUploadPath = CreateConVar("sm_demo_upload_dir", "/", "Директория загрузки демо через FTP"); 
+	g_hUploadPath = CreateConVar("sm_demo_upload_dir", "/", "Demo upload directory via FTP"); 
 	g_hUploadPath.GetString(g_sUploadPath, sizeof(g_sUploadPath));
 
 	AutoExecConfig(true, "autodemo_upload");
