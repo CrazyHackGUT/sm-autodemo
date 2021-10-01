@@ -33,7 +33,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.4.0 Alpha",
+  version     = "1.4.0 Alpha 2",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -78,7 +78,6 @@ ArrayList g_hUniquePlayers;
 char      g_szDemoName[64];
 char      g_szMapName[PLATFORM_MAX_PATH];
 bool      g_bRecording;
-StringMap g_hCustom;
 
 Handle    g_hCorePlugin;
 
@@ -303,7 +302,8 @@ public int API_SetDemoData(Handle hPlugin, int iNumParams)
   GetNativeString(1, szField, sizeof(szField));
   GetNativeString(2, szValue, sizeof(szValue));
 
-  g_hCustom.SetString(szField, szValue);
+  JSONObject hCustom = JSObj(UTIL_LazyCloseHandle(g_hMetaInfo.Get("data")));
+  hCustom.SetString(szField, szValue);
 }
 
 /**
@@ -443,14 +443,12 @@ void Recorder_Start() {
   g_hMetaInfo.SetString("unique_id", g_szDemoName);
   g_hMetaInfo.SetString("play_map", g_szMapName);
   g_hMetaInfo.SetInt("start_time", GetTime());
-
-  JSONArray hEvents = JSArr(UTIL_LazyCloseHandle(new JSONArray()));
-  g_hMetaInfo.Set("events", hEvents);
+  g_hMetaInfo.Set("events", JSArr(UTIL_LazyCloseHandle(new JSONArray())));
+  g_hMetaInfo.Set("data", JSObj(UTIL_LazyCloseHandle(new JSONObject())));
 
   g_bRecording = true;
 
   g_hUniquePlayers = new ArrayList(ByteCountToCells(4));
-  g_hCustom = new StringMap();
 
   for (int iClient = MaxClients; iClient != 0; --iClient)
     if (IsClientConnected(iClient) && IsClientAuthorized(iClient))
@@ -505,11 +503,6 @@ void Recorder_Stop() {
   }
   g_hMetaInfo.Set("players", hPlayers);
   g_hUniquePlayers.Close();
-
-  // add custom fields.
-  JSONObject hDemoFields = JSObj(UTIL_LazyCloseHandle(UTIL_StringMapToJSON(g_hCustom)));
-  g_hMetaInfo.Set("data", hDemoFields);
-  g_hCustom.Close();
 
   g_hMetaInfo.ToFile(szDemoPath);
   g_hMetaInfo.Close();
