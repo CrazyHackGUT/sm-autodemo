@@ -33,7 +33,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.4.0 Alpha 3",
+  version     = "1.4.0 Alpha 4",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -75,7 +75,6 @@ JSONObject g_hMetaInfo;
 
 StringMap g_hEventListeners;
 char      g_szDemoName[64];
-char      g_szMapName[PLATFORM_MAX_PATH];
 bool      g_bRecording;
 
 Handle    g_hCorePlugin;
@@ -117,10 +116,6 @@ public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iBu
 public void OnAllPluginsLoaded() {
   // TODO: expose to config?
   BuildPath(Path_SM, g_szBaseDemoPath, sizeof(g_szBaseDemoPath), "data/demos");
-}
-
-public void OnMapStart() {
-  GetCurrentMap(g_szMapName, sizeof(g_szMapName));
 }
 
 public void OnMapEnd() {
@@ -439,9 +434,12 @@ void Recorder_Start() {
   FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
   SourceTV_StartRecording(szDemoPath);
 
+  char szMapName[64];
+  GetCurrentMap(szMapName, sizeof(szMapName));
+
   g_hMetaInfo = new JSONObject();
   g_hMetaInfo.SetString("unique_id", g_szDemoName);
-  g_hMetaInfo.SetString("play_map", g_szMapName);
+  g_hMetaInfo.SetString("play_map", szMapName);
   g_hMetaInfo.SetInt("start_time", GetTime());
   g_hMetaInfo.Set("players", JSArr(UTIL_LazyCloseHandle(new JSONArray())));
   g_hMetaInfo.Set("events", JSArr(UTIL_LazyCloseHandle(new JSONArray())));
