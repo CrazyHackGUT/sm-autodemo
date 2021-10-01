@@ -24,12 +24,16 @@
 
 #include <AutoDemo>
 
+#define AS(%0,%1) (view_as<%0>(%1))
+#define JSArr(%0) AS(JSONArray, %0)
+#define JSObj(%0) AS(JSONObject, %0)
+
 #pragma newdecls  required
 #pragma semicolon 1
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.3.1",
+  version     = "1.4.0 Alpha",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -67,14 +71,13 @@ public Plugin myinfo = {
  */
 char  g_szBaseDemoPath[PLATFORM_MAX_PATH];
 
+JSONObject g_hMetaInfo;
+
 StringMap g_hEventListeners;
 ArrayList g_hUniquePlayers;
 char      g_szDemoName[64];
 char      g_szMapName[PLATFORM_MAX_PATH];
-int       g_iStartTime;
 bool      g_bRecording;
-int       g_iEndTime;
-ArrayList g_hEvents;
 StringMap g_hCustom;
 
 Handle    g_hCorePlugin;
@@ -239,22 +242,22 @@ public int API_TriggerEvent(Handle hPlugin, int iNumParams) {
 
   StringMap hEventData = GetNativeCell(2);
   if (hEventData) {
-    hEventData = view_as<StringMap>(CloneHandle(hEventData, g_hCorePlugin));
+    hEventData = view_as<StringMap>(UTIL_LazyCloseHandle(CloneHandle(hEventData, g_hCorePlugin)));
   }
 
   any data = (iNumParams < 3 ? 0 : GetNativeCell(3));
   if (!UTIL_TriggerEventListeners(szEventName, sizeof(szEventName), hEventData, data))
   {
-    if (hEventData) hEventData.Close();
     return;
   }
 
-  DataPack hPack = new DataPack();
-  hPack.WriteString(szEventName);
-  hPack.WriteCell(GetTime());
-  hPack.WriteCell(SourceTV_GetRecordingTick());
-  hPack.WriteCell(hEventData);
-  g_hEvents.Push(hPack);
+  JSONArray hEvents = JSArr(UTIL_LazyCloseHandle(g_hMetaInfo.Get("events")));
+  JSONObject hEvent = JSObj(UTIL_LazyCloseHandle(new JSONObject()));
+  hEvent.SetInt("time", GetTime());
+  hEvent.SetInt("tick", SourceTV_GetRecordingTick());
+  hEvent.SetString("event_name", szEventName);
+  hEvent.Set("data", JSObj(UTIL_LazyCloseHandle(UTIL_StringMapToJSON(hEventData))));
+  hEvents.Push(hEvent);
 }
 
 /**
@@ -436,11 +439,17 @@ void Recorder_Start() {
   FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
   SourceTV_StartRecording(szDemoPath);
 
+  g_hMetaInfo = new JSONObject();
+  g_hMetaInfo.SetString("unique_id", g_szDemoName);
+  g_hMetaInfo.SetString("play_map", g_szMapName);
+  g_hMetaInfo.SetInt("start_time", GetTime());
+
+  JSONArray hEvents = JSArr(UTIL_LazyCloseHandle(new JSONArray()));
+  g_hMetaInfo.Set("events", hEvents);
+
   g_bRecording = true;
-  g_iStartTime = GetTime();
 
   g_hUniquePlayers = new ArrayList(ByteCountToCells(4));
-  g_hEvents = new ArrayList(ByteCountToCells(4));
   g_hCustom = new StringMap();
 
   for (int iClient = MaxClients; iClient != 0; --iClient)
@@ -462,18 +471,13 @@ void Recorder_Stop() {
   int iRecordedTicks = SourceTV_GetRecordingTick();
   SourceTV_StopRecording();
   g_bRecording = false;
-  g_iEndTime = GetTime();
 
   char szDemoPath[PLATFORM_MAX_PATH];
   int iPos = FormatEx(szDemoPath, sizeof(szDemoPath), "%s/%s", g_szBaseDemoPath, g_szDemoName);
 
   strcopy(szDemoPath[iPos], sizeof(szDemoPath)-iPos, ".json");
-  JSONObject hMetaInfo = new JSONObject();
-  hMetaInfo.SetInt("start_time",      g_iStartTime);
-  hMetaInfo.SetInt("end_time",        g_iEndTime);
-  hMetaInfo.SetInt("recorded_ticks",  iRecordedTicks);
-  hMetaInfo.SetString("unique_id",    g_szDemoName);
-  hMetaInfo.SetString("play_map",     g_szMapName);
+  g_hMetaInfo.SetInt("end_time",        GetTime());
+  g_hMetaInfo.SetInt("recorded_ticks",  iRecordedTicks);
 
   // add players to JSON.
   char szUserName[128]; // csgo supports nicknames with length 128.
@@ -482,78 +486,39 @@ void Recorder_Stop() {
   StringMap   hCustomFields;
   JSONObject  hPlayerJSON;
   JSONObject  hPlayerFields;
-  JSONArray   hPlayers = new JSONArray();
+  JSONArray   hPlayers = JSArr(UTIL_LazyCloseHandle(new JSONArray()));
   int iPlayersCount = g_hUniquePlayers.Length;
   for (int iPlayer; iPlayer < iPlayersCount; ++iPlayer) {
-    hPlayerJSON = new JSONObject();
-    hPlayerPack = g_hUniquePlayers.Get(iPlayer);
+    hPlayerJSON = JSObj(UTIL_LazyCloseHandle(new JSONObject()));
+    hPlayerPack = AS(DataPack, UTIL_LazyCloseHandle(g_hUniquePlayers.Get(iPlayer)));
     hPlayerPack.Reset();
 
     hPlayerJSON.SetInt("account_id", hPlayerPack.ReadCell());
-    hCustomFields = hPlayerPack.ReadCell();
+    hCustomFields = AS(StringMap, UTIL_LazyCloseHandle(hPlayerPack.ReadCell()));
     hPlayerPack.ReadString(szUserName, sizeof(szUserName));
-    hPlayerPack.Close();
     hPlayerJSON.SetString("name", szUserName);
 
-    hPlayerFields = UTIL_StringMapToJSON(hCustomFields);
+    hPlayerFields = JSObj(UTIL_LazyCloseHandle(UTIL_StringMapToJSON(hCustomFields)));
     hPlayerJSON.Set("data", hPlayerFields);
 
     hPlayers.Push(hPlayerJSON);
-    hPlayerJSON.Close();
-    hCustomFields.Close();
-    hPlayerFields.Close();
   }
-  hMetaInfo.Set("players", hPlayers);
-  hPlayers.Close();
+  g_hMetaInfo.Set("players", hPlayers);
   g_hUniquePlayers.Close();
 
-  // add events.
-  char szEventName[64];
-
-  DataPack    hEventPack;
-  JSONObject  hEventJSON;
-  JSONObject  hEventDataJSON;
-  StringMap   hMap;
-  JSONArray   hEvents = new JSONArray();
-  int iEventsCount = g_hEvents.Length;
-  for (int iEvent; iEvent < iEventsCount; ++iEvent) {
-    hEventJSON = new JSONObject();
-    hEventPack = g_hEvents.Get(iEvent);
-    hEventPack.Reset();
-
-    hEventPack.ReadString(szEventName, sizeof(szEventName));
-    hEventJSON.SetString("event_name", szEventName);
-
-    hEventJSON.SetInt("time", hEventPack.ReadCell());
-    hEventJSON.SetInt("tick", hEventPack.ReadCell());
-    hMap = hEventPack.ReadCell();
-    hEventPack.Close();
-
-    hEventDataJSON = UTIL_StringMapToJSON(hMap);
-    hMap.Close();
-    hEventJSON.Set("data", hEventDataJSON);
-    hEventDataJSON.Close();
-    hEvents.Push(hEventJSON);
-    hEventJSON.Close();
-  }
-  hMetaInfo.Set("events", hEvents);
-  hEvents.Close();
-  g_hEvents.Clear();
-
   // add custom fields.
-  JSONObject hDemoFields = UTIL_StringMapToJSON(g_hCustom);
-  hMetaInfo.Set("data", hDemoFields);
-  hDemoFields.Close();
+  JSONObject hDemoFields = JSObj(UTIL_LazyCloseHandle(UTIL_StringMapToJSON(g_hCustom)));
+  g_hMetaInfo.Set("data", hDemoFields);
   g_hCustom.Close();
 
-  hMetaInfo.ToFile(szDemoPath);
-  hMetaInfo.Close();
+  g_hMetaInfo.ToFile(szDemoPath);
+  g_hMetaInfo.Close();
 }
 
 void Recorder_Validate()
 {
   if (!SourceTV_IsActive())
-    SetFailState("SourceTV bot is not active.");
+    SetFailState("SourceTV bot is not active."); // TODO: just throw an error? Native or general?
 }
 
 /**
@@ -700,4 +665,25 @@ void UTIL_RemoveEventListener(const char[] szEventName, Handle hPlugin, DemoRec_
     hListeners.Erase(iEventListener);
     break;
   }
+}
+
+/**
+ * Requests the closing handle in next frame and returns passed handle.
+ *
+ * @param     hHandle   Handle for lazy closing.
+ * @return              Passed handle.
+ */
+stock Handle UTIL_LazyCloseHandle(Handle hHandle)
+{
+  if (hHandle)
+  {
+    RequestFrame(OnHandleShouldBeClosed, hHandle);
+  }
+
+  return hHandle;
+}
+
+static void OnHandleShouldBeClosed(Handle hHndl)
+{
+  hHndl.Close();
 }
