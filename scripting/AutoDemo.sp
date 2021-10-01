@@ -33,7 +33,7 @@
 
 public Plugin myinfo = {
   description = "Recorder Core for web-site",
-  version     = "1.4.0 Alpha 2",
+  version     = "1.4.0 Alpha 3",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Core",
   url         = "https://kruzya.me"
@@ -74,7 +74,6 @@ char  g_szBaseDemoPath[PLATFORM_MAX_PATH];
 JSONObject g_hMetaInfo;
 
 StringMap g_hEventListeners;
-ArrayList g_hUniquePlayers;
 char      g_szDemoName[64];
 char      g_szMapName[PLATFORM_MAX_PATH];
 bool      g_bRecording;
@@ -130,43 +129,39 @@ public void OnMapEnd() {
 }
 
 public void OnClientAuthorized(int iClient, const char[] szAuth) {
-  // Don't write in metadata any bot.
   if (!g_bRecording)
   {
     return;
   }
 
+  // Don't write in metadata any bot.
   if (!API_IsShouldBeWrittenToMetadata(iClient))
   {
     return;
   }
 
   int iAccountID = GetSteamAccountID(iClient);
-  char szName[32];
+  char szName[128]; // csgo supports nicknames with length 128.
   GetClientName(iClient, szName, sizeof(szName));
 
-  int iUniquePlayers = g_hUniquePlayers.Length;
-  DataPack hPack;
+  JSONArray hPlayers = JSArr(UTIL_LazyCloseHandle(g_hMetaInfo.Get("players")));
+  int iUniquePlayers = hPlayers.Length;
+  JSONObject hPlayer;
   for (int iPlayer; iPlayer < iUniquePlayers; ++iPlayer) {
-    hPack = g_hUniquePlayers.Get(iPlayer);
-    hPack.Reset();
-    if (hPack.ReadCell() == iAccountID) {
-      StringMap hMap = hPack.ReadCell();
+    hPlayer = JSObj(UTIL_LazyCloseHandle(hPlayers.Get(iPlayer)));
 
-      hPack.Reset(true);
-      hPack.WriteCell(iAccountID);
-      hPack.WriteCell(hMap);
-      hPack.WriteString(szName);
+    if (hPlayer.GetInt("account_id") == iAccountID) {
+      hPlayer.SetString("name", szName);
 
       return;
     }
   }
 
-  hPack = new DataPack();
-  hPack.WriteCell(iAccountID);
-  hPack.WriteCell(new StringMap());
-  hPack.WriteString(szName);
-  g_hUniquePlayers.Push(hPack);
+  hPlayer = JSObj(UTIL_LazyCloseHandle(new JSONObject()));
+  hPlayer.SetInt("account_id", iAccountID);
+  hPlayer.SetString("name", szName);
+  hPlayer.Set("data", JSObj(UTIL_LazyCloseHandle(new JSONObject())));
+  hPlayers.Push(hPlayer);
 }
 
 /**
@@ -205,17 +200,17 @@ static void API_AssertIsValidHandle(Handle hHandle, const char[] szFormatStr, an
   ThrowNativeError(SP_ERROR_NATIVE, "%s", szErrorBuffer);
 }
 
-static DataPack API_GetClientPack(int iAccountID)
+static JSONObject API_GetClientJSON(int iAccountID)
 {
-  // Find client in ArrayList.
-  DataPack hClient;
-  int iClientCount = g_hUniquePlayers.Length;
+  // Find client in JSONArray.
+  JSONArray hClients = JSArr(UTIL_LazyCloseHandle(g_hMetaInfo.Get("players")));
+  JSONObject hClient;
+
+  int iClientCount = hClients.Length;
   for (int iClientId = 0; iClientId < iClientCount && !hClient; ++iClientId)
   {
-    hClient = g_hUniquePlayers.Get(iClientId);
-    hClient.Reset();
-
-    if (hClient.ReadCell() != iAccountID)
+    hClient = JSObj(UTIL_LazyCloseHandle(hClients.Get(iClientId)));
+    if (hClient.GetInt("account_id") != iAccountID)
     {
       hClient = null;
     }
@@ -366,17 +361,17 @@ public int API_GetClientData(Handle hPlugin, int iNumParams)
   int iAccountID = GetSteamAccountID(iClient);
 
   // Find client in ArrayList.
-  DataPack hClient = API_GetClientPack(iAccountID);
+  JSONObject hClient = API_GetClientJSON(iAccountID);
   API_AssertIsValidHandle(hClient, "Couldn't find client %L in registered players", iClient);
 
   char szKey[128];
   char szValue[512];
 
   GetNativeString(2, szKey, sizeof(szKey));
-  StringMap hMap = view_as<StringMap>(hClient.ReadCell());
-  API_AssertIsValidHandle(hMap, "Handle %x with client data %L is invalid", hMap, iClient);
+  JSONObject hData = JSObj(UTIL_LazyCloseHandle(hClient.Get("data")));
+  API_AssertIsValidHandle(hData, "Handle %x with client data %L is invalid", hData, iClient);
 
-  if (hMap.GetString(szKey, szValue, sizeof(szValue)))
+  if (hData.GetString(szKey, szValue, sizeof(szValue)))
   {
     SetNativeString(3, szValue, GetNativeCell(4), true);
     return true;
@@ -401,7 +396,7 @@ public int API_SetClientData(Handle hPlugin, int iNumParams)
   int iAccountID = GetSteamAccountID(iClient);
 
   // Find client in ArrayList.
-  DataPack hClient = API_GetClientPack(iAccountID);
+  JSONObject hClient = API_GetClientJSON(iAccountID);
   API_AssertIsValidHandle(hClient, "Couldn't find client %L in registered players", iClient);
 
   char szKey[128];
@@ -410,10 +405,15 @@ public int API_SetClientData(Handle hPlugin, int iNumParams)
   GetNativeString(2, szKey, sizeof(szKey));
   GetNativeString(3, szValue, sizeof(szValue));
 
-  StringMap hMap = hClient.ReadCell();
-  API_AssertIsValidHandle(hMap, "Handle %x with client data %L is invalid", hMap, iClient);
+  JSONObject hData = JSObj(UTIL_LazyCloseHandle(hClient.Get("data")));
+  API_AssertIsValidHandle(hData, "Handle %x with client data %L is invalid", hData, iClient);
 
-  hMap.SetString(szKey, szValue, GetNativeCell(4));
+  if (!GetNativeCell(4) && hData.HasKey(szKey))
+  {
+    return 0;
+  }
+
+  hData.SetString(szKey, szValue);
   return 0;
 }
 
@@ -443,12 +443,11 @@ void Recorder_Start() {
   g_hMetaInfo.SetString("unique_id", g_szDemoName);
   g_hMetaInfo.SetString("play_map", g_szMapName);
   g_hMetaInfo.SetInt("start_time", GetTime());
+  g_hMetaInfo.Set("players", JSArr(UTIL_LazyCloseHandle(new JSONArray())));
   g_hMetaInfo.Set("events", JSArr(UTIL_LazyCloseHandle(new JSONArray())));
   g_hMetaInfo.Set("data", JSObj(UTIL_LazyCloseHandle(new JSONObject())));
 
   g_bRecording = true;
-
-  g_hUniquePlayers = new ArrayList(ByteCountToCells(4));
 
   for (int iClient = MaxClients; iClient != 0; --iClient)
     if (IsClientConnected(iClient) && IsClientAuthorized(iClient))
@@ -476,34 +475,6 @@ void Recorder_Stop() {
   strcopy(szDemoPath[iPos], sizeof(szDemoPath)-iPos, ".json");
   g_hMetaInfo.SetInt("end_time",        GetTime());
   g_hMetaInfo.SetInt("recorded_ticks",  iRecordedTicks);
-
-  // add players to JSON.
-  char szUserName[128]; // csgo supports nicknames with length 128.
-
-  DataPack    hPlayerPack;
-  StringMap   hCustomFields;
-  JSONObject  hPlayerJSON;
-  JSONObject  hPlayerFields;
-  JSONArray   hPlayers = JSArr(UTIL_LazyCloseHandle(new JSONArray()));
-  int iPlayersCount = g_hUniquePlayers.Length;
-  for (int iPlayer; iPlayer < iPlayersCount; ++iPlayer) {
-    hPlayerJSON = JSObj(UTIL_LazyCloseHandle(new JSONObject()));
-    hPlayerPack = AS(DataPack, UTIL_LazyCloseHandle(g_hUniquePlayers.Get(iPlayer)));
-    hPlayerPack.Reset();
-
-    hPlayerJSON.SetInt("account_id", hPlayerPack.ReadCell());
-    hCustomFields = AS(StringMap, UTIL_LazyCloseHandle(hPlayerPack.ReadCell()));
-    hPlayerPack.ReadString(szUserName, sizeof(szUserName));
-    hPlayerJSON.SetString("name", szUserName);
-
-    hPlayerFields = JSObj(UTIL_LazyCloseHandle(UTIL_StringMapToJSON(hCustomFields)));
-    hPlayerJSON.Set("data", hPlayerFields);
-
-    hPlayers.Push(hPlayerJSON);
-  }
-  g_hMetaInfo.Set("players", hPlayers);
-  g_hUniquePlayers.Close();
-
   g_hMetaInfo.ToFile(szDemoPath);
   g_hMetaInfo.Close();
 }
