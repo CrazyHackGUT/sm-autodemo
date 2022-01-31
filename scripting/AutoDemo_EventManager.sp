@@ -26,7 +26,7 @@
 
 public Plugin myinfo = {
   description = "Handles all generic events",
-  version     = "1.0.10",
+  version     = "1.1.0",
   author      = "CrazyHackGUT aka Kruzya",
   name        = "[AutoDemo] Event Manager",
   url         = "https://kruzya.me"
@@ -79,6 +79,8 @@ public void OnPluginStart()
   g_hMinPlayers = CreateConVar("sm_autodemo_minplayers", "4", "Player count required for starting record\nNOTE: This value for map recording works different. Demo stops in end round if limit isn't completes, and starts in start round.", _, true, 0.0);
   HookConVarChange(g_hRecordMode, OnRecordModeChanged);
   HookConVarChange(g_hMinPlayers, OnMinPlayersChanged);
+
+  AutoExecConfig(true, "autodemo_em");
 }
 
 public void OnMapStart()
@@ -302,6 +304,11 @@ int UTIL_GetClientCount(bool bInGameOnly = true, bool bWithSpectators = false)
   for (int iClient = MaxClients; iClient != 0; --iClient)
   {
     if (!IsClientConnected(iClient))
+    {
+      continue;
+    }
+
+    if (IsFakeClient(iClient))
     {
       continue;
     }
