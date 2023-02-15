@@ -6,12 +6,14 @@ env:
     - SMVERSION=1.9
     - SMVERSION=1.10
     - SMVERSION=1.11
+    - SMVERSION=1.12
 
 matrix:
     fast_finish: true
     allow_failures:
     - env: SMVERSION=1.8
     - env: SMVERSION=1.9
+    - env: SMVERSION=1.12
 
 before_install:
     - sudo apt-get update

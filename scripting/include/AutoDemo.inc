@@ -3,6 +3,9 @@
 #endif
 #define _AutoDemo_included
 
+#define AUTODEMO_VERSION  "1.4.0"
+#define AUTODEMO_API_VERSION  1000470
+
 /**
  * @section Natives
  */
